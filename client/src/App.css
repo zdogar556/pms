@@ -1,0 +1,13 @@
+*{
+    font-family: 'Manrope', sans-serif;
+}
+
+body::-webkit-scrollbar,
+#overflow::-webkit-scrollbar {
+  display: none;
+}
+
+
+td{
+  font-size: 0.9rem;
+}
