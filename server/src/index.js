@@ -2,11 +2,17 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors"
+import morgan from "morgan";
 import routes from "./routes/index.routes.js";
 
 dotenv.config();
 
 const app = express();
+
+// Configure morgan logger
+morgan.token('body', (req) => JSON.stringify(req.body));
+app.use(morgan(':method :url :status :response-time ms - :res[content-length] - :body'));
+
 app.use(express.json());
 app.use(cors());
 

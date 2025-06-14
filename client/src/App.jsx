@@ -13,6 +13,7 @@ const Payroll = lazy(() => import("./pages/payroll/Payroll"));
 const Feed = lazy(() => import("./pages/feed/Feed"));
 const Feedconsume = lazy(() => import("./pages/feed/feedConsume"));
 const PoultryBatches = lazy(() => import("./pages/poultry-batches/poultry-batches"));
+const PoultryBatchRecord = lazy(() => import("./pages/poultry-batches/poultry-batch-record"));
 
 const Loader = () => <div className="flex items-center justify-center h-screen">Loading...</div>;
 
@@ -36,6 +37,7 @@ const App = () => {
               <Route path="feeds" element={<Feed />} />
               <Route path="feedconsume" element={<Feedconsume />} />
               <Route path="batch" element={<PoultryBatches />} />
+              <Route path="batch/:batchId/records" element={<PoultryBatchRecord />} />
               <Route path="*" element={<Navigate to="/pms/" />} />
             </Route>
           ) : (

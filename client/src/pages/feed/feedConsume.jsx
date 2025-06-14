@@ -4,11 +4,10 @@ import { useService } from "../../context";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "../../components/Loader";
 
-
 const FeedConsume = () => {
-     const {
+  const {
     loading,
-    feedConsumption =[],
+    feedConsumptions = [],
     getFeedConsumptions,
     createFeedConsumption,
     getFeedConsumptionById,
@@ -53,7 +52,9 @@ const FeedConsume = () => {
     if (id) {
       const consumption = await getFeedConsumptionById(id);
       setNewConsumption({
-        date: consumption.date ? new Date(consumption.date).toISOString().split("T")[0] : "",
+        date: consumption.date
+          ? new Date(consumption.date).toISOString().split("T")[0]
+          : "",
         feedType: consumption.feedType || "",
         quantity: consumption.quantity || "",
         // cost: feed.cost || "",
@@ -74,8 +75,13 @@ const FeedConsume = () => {
   };
 
   useEffect(() => {
-    getFeedConsumptions();
+    const fetchData = async () => {
+      const result = await getFeedConsumptions();
+      console.log(result, "result");
+    };
+    fetchData();
   }, []);
+
 
   return (
     <div className="p-6 text-[0.828rem]">
@@ -105,45 +111,49 @@ const FeedConsume = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(feedConsumption) && feedConsumption.length > 0 ? (
-  feedConsumption.map((feedConsumption) => (
-    <tr key={feedConsumption._id} className="border-b hover:bg-gray-100">
-      <td className="px-4 py-3">{formatDate(feed.date)}</td>
-      <td className="px-4 py-3">{feedConsumption.feedType}</td>
-      <td className="pl-9 py-3">{feedConsumption.quantity}</td>
-      <td className="px-4 py-3">{feedConsumption.ConsumedBy}</td>
-      <td className="px-4 py-3">{feedConsumption.notes}</td>
-      <td className="pl-12 py-3 flex space-x-2">
-        <button
-          onClick={() => handleEdit(feed._id)}
-          className="text-blue-500 hover:text-blue-700"
-        >
-          <FaEdit />
-        </button>
-        <button
-          onClick={async () => {
-            if (window.confirm("Are you sure you want to delete?")) {
-              await deleteFeedConsumption(feed._id);
-            }
-          }}
-          className="text-red-500 hover:text-red-700"
-        >
-          <FaTrash />
-        </button>
-      </td>
-    </tr>
-  ))
-) : (
-  <tr>
-    <td colSpan={6} className="text-center py-4 text-gray-500">
-      No feed consumption records found
-    </td>
-  </tr>
-)}
-
+            {Array.isArray(feedConsumptions) && feedConsumptions.length > 0 ? (
+              feedConsumptions.map((feedConsumption) => (
+                <tr
+                  key={feedConsumptions._id}
+                  className="border-b hover:bg-gray-100"
+                >
+                  <td className="px-4 py-3 text-center">{formatDate(feedConsumption.date)}</td>
+                  <td className="px-4 py-3 text-center">{feedConsumption.feedType}</td>
+                  <td className="pl-9 py-3 text-center">{feedConsumption.quantityUsed}</td>
+                  <td className="px-4 py-3 text-center">{feedConsumption.consumedBy}</td>
+                  <td className="px-4 py-3 text-center">{feedConsumption.notes}</td>
+                  <td className="pl-12 py-3 flex space-x-2">
+                    <button
+                      onClick={() => handleEdit(feedConsumption._id)}
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <FaEdit />
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (
+                          window.confirm("Are you sure you want to delete?")
+                        ) {
+                          await deleteFeedConsumption(feedConsumption._id);
+                        }
+                      }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <FaTrash />
+                    </button>
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td colSpan={6} className="text-center py-4 text-gray-500">
+                  No feed consumption records found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {feedConsumption?.length === 0 && (
+        {feedConsumptions?.length === 0 && (
           <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
             No feed consumption records found
           </div>
@@ -168,7 +178,9 @@ const FeedConsume = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
-                {actionType === "create" ? "Record Consumption" : "Update Consumption"}
+                {actionType === "create"
+                  ? "Record Consumption"
+                  : "Update Consumption"}
               </h3>
 
               <div className="flex flex-col gap-4">

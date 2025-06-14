@@ -29,8 +29,10 @@ const ServiceProvider = ({ children }) => {
   const [workers, setWorkers] = useState([]);
   const [feed, setFeed] = useState([]);
   const [feedConsumption, setFeedConsumption] = useState([]);
+  const [feedConsumptions, setFeedConsumptions] = useState([]);
   const [batches, setBatches] = useState([]);
   const [productions, setProductions] = useState([]);
+  const [poultryRecords, setPoultryRecords] = useState([]);
   const [payrolls, setPayrolls] = useState([]);
   const [loggedInUser, setloggedInUser] = useState(
     JSON.parse(localStorage.getItem("admin")) || null
@@ -281,7 +283,8 @@ const getFeedConsumptions = async () => {
   try {
     setLoading(true);
     const { data } = await axios.get(`${URL}/feedconsume`, resolver);
-    setFeedConsumption(data.feedConsumptions);
+    setFeedConsumptions(data);
+    return data;
   } catch (error) {
     console.log(error.message);
   } finally {
@@ -360,6 +363,19 @@ const getBatches = async () => {
     setLoading(false);
   }
 };
+
+const getPoultryRecords = async () => {
+  try {
+    setLoading(true);
+    const { data } = await axios.get(`${URL}/poultryrecord`, resolver);
+    setPoultryRecords(data);
+  } catch (error) {
+    console.error(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
 const getBatchById = async (id) => {
   try {
@@ -588,6 +604,51 @@ const deleteBatch = async (id) => {
     return `${day} ${month}, ${year}`;
   };
 
+  const createPoultryRecord = async (record) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.post(`${URL}/poultryrecord`, record, mutation);
+      setPoultryRecords([...poultryRecords, data.poultryRecord]);
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to create poultry record");
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updatePoultryRecord = async (id, record) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.patch(`${URL}/poultryrecord/${id}`, record, mutation);
+      const updatedList = [...poultryRecords];
+      const index = updatedList.findIndex((item) => item._id === id);
+      updatedList[index] = data.poultryRecord;
+      setPoultryRecords(updatedList);
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to update poultry record");
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const deletePoultryRecord = async (id) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.delete(`${URL}/poultryrecord/${id}`, mutation);
+      setPoultryRecords(poultryRecords.filter((item) => item._id !== id));
+      toast.success(data.message);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to delete poultry record");
+      console.log(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getFeeds();
     getWorkers();
@@ -607,6 +668,12 @@ const deleteBatch = async (id) => {
         payrolls,
         loggedInUser,
         loading,
+        feedConsumptions,
+        poultryRecords,
+        getPoultryRecords,
+        createPoultryRecord,
+        updatePoultryRecord,
+        deletePoultryRecord,
         formatDate,
         register,
         signIn,

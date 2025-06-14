@@ -47,7 +47,13 @@ import {
   updateBatch,
   deleteBatch
 } from "../controllers/poultryBatch.controller.js";
-
+import {
+  createPoultryRecord,
+  getPoultryRecords,
+  getPoultryRecordById,
+  updatePoultryRecord,
+  deletePoultryRecord,
+} from "../controllers/poultryRecord.controller.js";
 
 import verifyToken from "../middlewares/auth.middleware.js"
 import { getInsights } from "../controllers/insight.controller.js";
@@ -104,5 +110,12 @@ router.get("/batch", verifyToken, getBatches);
 router.get("/batch/:id", verifyToken, getBatchById);
 router.patch("/batch/:id", verifyToken, updateBatch);
 router.delete("/batch/:id", verifyToken, deleteBatch);
+
+// 🐔 Poultry Record
+router.post("/poultryrecord", verifyToken, createPoultryRecord);
+router.get("/poultryrecord", verifyToken, getPoultryRecords);
+router.get("/poultryrecord/:id", verifyToken, getPoultryRecordById);
+router.patch("/poultryrecord/:id", verifyToken, updatePoultryRecord);
+router.delete("/poultryrecord/:id", verifyToken, deletePoultryRecord);
 
 export default router;

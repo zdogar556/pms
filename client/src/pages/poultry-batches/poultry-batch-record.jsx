@@ -1,83 +1,104 @@
 import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 import { useService } from "../../context";
-import { FaPlus, FaEdit, FaTrash, FaList } from "react-icons/fa";
+import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import Loader from "../../components/Loader";
 
-const PoultryBatches = () => {
+const PoultryBatchRecord = () => {
+  const { batchId } = useParams();
   const {
-    batches,
-    getBatches,
-    createBatch,
-    updateBatch,
-    deleteBatch,
+    loading,
     getBatchById,
+    getPoultryRecords,
     poultryRecords,
-    getPoultryRecords
+    formatDate,
+    createPoultryRecord,
+    updatePoultryRecord,
+    deletePoultryRecord
   } = useService();
 
+  const [batch, setBatch] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [formData, setFormData] = useState({
-    batchName: "",
-    type: "",
-    quantity: "",
-    startDate: "",
-    notes: ""
+    date: "",
+    expiredCount: "",
+    notes: "",
   });
   const [editingId, setEditingId] = useState(null);
 
-  const handleInput = (e) => {
-    const { name, value } = e.target;
-    if (name === "quantity") {
-      // Ensure quantity is a positive number
-      const numValue = parseInt(value);
-      if (isNaN(numValue) || numValue < 0) return;
-    }
-    setFormData({ ...formData, [name]: value });
-  };
+  useEffect(() => {
+    const fetchData = async () => {
+      const batchData = await getBatchById(batchId);
+      setBatch(batchData);
+      await getPoultryRecords();
+    };
+    fetchData();
+  }, [batchId]);
+
+  const handleInput = (e) =>
+    setFormData({ ...formData, [e.target.name]: e.target.value });
 
   const handleSubmit = async () => {
-    if (editingId) {
-      await updateBatch(editingId, formData);
-    } else {
-      await createBatch(formData);
+    try {
+      if (editingId) {
+        // Update record
+        await updatePoultryRecord(editingId, formData);
+      } else {
+        // Create new record
+        await createPoultryRecord({ ...formData, batchId });
+      }
+      setModalOpen(false);
+      setEditingId(null);
+      resetForm();
+      await getPoultryRecords();
+    } catch (error) {
+      console.error("Error submitting record:", error);
     }
-    setModalOpen(false);
-    setEditingId(null);
-    resetForm();
   };
 
   const resetForm = () => {
-    setFormData({ batchName: "", type: "", quantity: "", startDate: "", notes: "" });
+    setFormData({
+      date: "",
+      expiredCount: "",
+      notes: "",
+    });
   };
 
-  const openEdit = async (id) => {
-    const batch = await getBatchById(id);
+  const openEdit = (record) => {
     setFormData({
-      batchName: batch.batchName,
-      type: batch.type,
-      quantity: batch.quantity,
-      startDate: new Date(batch.startDate).toISOString().split("T")[0],
-      notes: batch.notes
+      date: new Date(record.date).toISOString().split("T")[0],
+      expiredCount: record.expiredCount,
+      notes: record.notes || "",
     });
-    setEditingId(id);
+    setEditingId(record._id);
     setModalOpen(true);
   };
-
-  useEffect(() => {
-    getBatches();
-  }, []);
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 }
+    exit: { opacity: 0, scale: 0.95 },
   };
+
+  // Filter records for this batch
+  const batchRecords = poultryRecords?.filter(
+    (record) => record?.batchId === batchId
+  ) || [];
 
   return (
     <div className="p-6 text-[0.828rem]">
+      {loading && <Loader />}
+
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Poultry Batches</h2>
+        <div>
+          <h2 className="text-xl font-semibold">Poultry Batch Records</h2>
+          {batch && (
+            <p className="text-sm text-gray-600 mt-1">
+              Batch: {batch.batchName} ({batch.type})
+            </p>
+          )}
+        </div>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
           onClick={() => {
@@ -86,7 +107,7 @@ const PoultryBatches = () => {
           }}
         >
           <FaPlus className="text-sm" />
-          Add Batch
+          Add Record
         </button>
       </div>
 
@@ -94,46 +115,32 @@ const PoultryBatches = () => {
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
             <tr>
-              <th className="px-4 py-3">Batch Name</th>
-              <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Quantity</th>
-              <th className="px-4 py-3">Quantity</th>
-              <th className="px-4 py-3">Start Date</th>
+              <th className="px-4 py-3">Date</th>
+              <th className="px-4 py-3">Expired Count</th>
               <th className="px-4 py-3">Notes</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {batches?.length > 0 ? (
-              batches.map((b) => (
-                <tr key={b._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3 text-center">{b.batchName}</td>
-                  <td className="px-4 py-3 text-center">{b.type}</td>
-                  <td className="px-4 py-3 text-center">{b.quantity}</td>
-                  <td className="px-4 py-3 text-center">{b.currentQuantity}</td>
-                  <td className="px-4 py-3 text-center">{new Date(b.startDate).toLocaleDateString()}</td>
-                  <td className="px-4 py-3 text-center">{b.notes}</td>
+            {batchRecords.length > 0 ? (
+              batchRecords.map((record) => (
+                <tr key={record._id} className="border-b hover:bg-gray-100">
+                  <td className="px-4 py-3 text-center">{formatDate(record.date)}</td>
+                  <td className="px-4 py-3 text-center">{record.expiredCount}</td>
+                  <td className="px-4 py-3 text-center">{record.notes}</td>
                   <td className="px-4 py-3 text-center flex space-x-2">
-                    <Link
-                      to={`/pms/batch/${b._id}/records`}
-                      className="text-green-500 hover:text-green-700"
-                      title="View Records"
-                    >
-                      <FaList />
-                    </Link>
                     <button
-                      onClick={() => openEdit(b._id)}
+                      onClick={() => openEdit(record)}
                       className="text-blue-500 hover:text-blue-700"
-                      title="Edit Batch"
                     >
                       <FaEdit />
                     </button>
                     <button
                       onClick={() =>
-                        window.confirm("Are you sure?") && deleteBatch(b._id)
+                        window.confirm("Are you sure?") &&
+                        deletePoultryRecord(record._id)
                       }
                       className="text-red-500 hover:text-red-700"
-                      title="Delete Batch"
                     >
                       <FaTrash />
                     </button>
@@ -142,8 +149,8 @@ const PoultryBatches = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-8 text-sm font-medium">
-                  No batches found.
+                <td colSpan="4" className="text-center py-8 text-sm font-medium">
+                  No records found for this batch.
                 </td>
               </tr>
             )}
@@ -169,51 +176,34 @@ const PoultryBatches = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
-                {editingId ? "Update Batch" : "Add New Batch"}
+                {editingId ? "Update Record" : "Add New Record"}
               </h3>
 
               <div className="flex flex-col gap-4">
                 <input
-                  type="text"
-                  name="batchName"
-                  placeholder="Batch Name"
-                  value={formData.batchName}
+                  type="date"
+                  name="date"
+                  value={formData.date}
                   onChange={handleInput}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 />
-                <select
-                  name="type"
-                  value={formData.type}
-                  onChange={handleInput}
-                  className="border border-gray-300 p-2.5 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                >
-                  <option value="">__Select Type</option>
-                  <option value="Broiler">Broiler</option>
-                  <option value="Layer">Layer</option>
-                </select>
                 <input
                   type="number"
-                  name="quantity"
-                  min={0}
-                  placeholder="Quantity"
-                  value={formData.quantity}
+                  name="expiredCount"
+                  placeholder="Expired Count"
+                  value={formData.expiredCount}
                   onChange={handleInput}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  required
                 />
-                <input
-                  type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInput}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-                <input
-                  type="text"
+                <textarea
                   name="notes"
                   placeholder="Notes"
                   value={formData.notes}
                   onChange={handleInput}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows="3"
                 />
 
                 <div className="flex justify-end gap-3 mt-6">
@@ -239,4 +229,4 @@ const PoultryBatches = () => {
   );
 };
 
-export default PoultryBatches;
+export default PoultryBatchRecord;

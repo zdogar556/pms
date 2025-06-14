@@ -1,4 +1,5 @@
 import PoultryBatch from "../models/poultryBatch.model.js";
+import PoultryRecord from "../models/poultryRecord.model.js";
 
 export const createBatch = async (req, res) => {
   try {
@@ -13,7 +14,25 @@ export const createBatch = async (req, res) => {
 export const getBatches = async (req, res) => {
   try {
     const batches = await PoultryBatch.find();
-  res.status(200).json(batches);
+    
+    // Get all batches with their poultry records
+    const batchesWithCurrentQuantity = await Promise.all(batches.map(async (batch) => {
+      const batchObj = batch.toObject();
+      
+      // Get total expired count from poultry records for this batch
+      const totalExpired = await PoultryRecord.aggregate([
+        { $match: { batchId: batch._id } },
+        { $group: { _id: null, totalExpired: { $sum: "$expiredCount" } } }
+      ]);
+
+      // Calculate current quantity by subtracting total expired
+      const expiredCount = totalExpired[0]?.totalExpired || 0;
+      batchObj.currentQuantity = batch.quantity - expiredCount;
+
+      return batchObj;
+    }));
+
+    res.status(200).json(batchesWithCurrentQuantity);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
