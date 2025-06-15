@@ -24,15 +24,49 @@ const Production = () => {
     totalEggs: "",
     damagedEggs: "",
   });
+  const [errors, setErrors] = useState({});
+
+  const validate = (name, value, updatedProduction) => {
+    let error = "";
+
+    const total = parseInt(updatedProduction.totalEggs || 0);
+    const damaged = parseInt(updatedProduction.damagedEggs || 0);
+
+    if (name === "totalEggs") {
+      if (value <= 0) {
+        error = "Total eggs must be greater than 0.";
+      } else if (damaged > value) {
+        error = "Damaged eggs cannot exceed total eggs.";
+      }
+    }
+
+    if (name === "damagedEggs") {
+      if (value < 0) {
+        error = "Damaged eggs cannot be negative.";
+      } else if (value > total) {
+        error = "Damaged eggs cannot exceed total eggs.";
+      }
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+  };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewProduction({ ...newProduction, [name]: value });
+    const updatedProduction = { ...newProduction, [name]: value };
+    setNewProduction(updatedProduction);
+    validate(name, parseInt(value), updatedProduction);
   };
 
   const handleProduction = async () => {
+    if (Object.values(errors).some((e) => e)) return;
+
     if (actionType === "create") await createProduction(newProduction);
     else await updateProduction(updateProductionId, newProduction);
+
     setActionType("create");
     setModalOpen(false);
     setNewProduction({
@@ -40,6 +74,7 @@ const Production = () => {
       totalEggs: "",
       damagedEggs: "",
     });
+    setErrors({});
   };
 
   async function handleEdit(id) {
@@ -58,7 +93,6 @@ const Production = () => {
     }
   }
 
-  // Animation variants for the modal
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
@@ -72,7 +106,7 @@ const Production = () => {
   return (
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
-     
+
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Production Management</h2>
         <button
@@ -101,7 +135,6 @@ const Production = () => {
                   <td className="pl-16 py-3">{formatDate(production.date)}</td>
                   <td className="pl-14 py-3">{production.totalEggs} Eggs</td>
                   <td className="pl-14 py-3">{production.damagedEggs} Eggs</td>
-
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
                       onClick={() => handleEdit(production._id)}
@@ -111,9 +144,7 @@ const Production = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (
-                          window.confirm("Are you sure you want to delete?")
-                        ) {
+                        if (window.confirm("Are you sure you want to delete?")) {
                           await deleteProduction(production._id);
                         }
                       }}
@@ -127,13 +158,13 @@ const Production = () => {
           </tbody>
         </table>
         {productions.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-smfont-medium">
+          <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
             No production found
           </div>
         )}
       </div>
 
-      {/* Modal with Framer Motion */}
+      {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -165,34 +196,63 @@ const Production = () => {
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
-                <input
-                  type="number"
-                  name="totalEggs"
-                  placeholder="Total Eggs"
-                  value={newProduction.totalEggs}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-                <input
-                  type="number"
-                  name="damagedEggs"
-                  placeholder="Damages Eggs"
-                  value={newProduction.damagedEggs}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    name="totalEggs"
+                    placeholder="Total Eggs"
+                    value={newProduction.totalEggs}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      errors.totalEggs
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {errors.totalEggs && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {errors.totalEggs}
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    name="damagedEggs"
+                    placeholder="Damaged Eggs"
+                    value={newProduction.damagedEggs}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      errors.damagedEggs
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {errors.damagedEggs && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {errors.damagedEggs}
+                    </span>
+                  )}
+                </div>
+
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
                     onClick={handleProduction}
+                    disabled={Object.values(errors).some((e) => e)}
                   >
                     {actionType === "create" ? "Add" : "Update"}
                   </button>
                   <button
                     className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
-                    onClick={() => setModalOpen(false)}
+                    onClick={() => {
+                      setModalOpen(false);
+                      setErrors({});
+                    }}
                   >
                     Cancel
                   </button>

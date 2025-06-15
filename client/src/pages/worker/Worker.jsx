@@ -18,6 +18,7 @@ const Worker = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState("create");
   const [updateWorkerId, setUpdateWorkerId] = useState(null);
+  const [salaryError, setSalaryError] = useState(false);
   const [newWorker, setNewWorker] = useState({
     name: "",
     role: "",
@@ -29,11 +30,32 @@ const Worker = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewWorker({ ...newWorker, [name]: value });
+
+    if (name === "salary") {
+      const salary = parseFloat(value);
+      setSalaryError(salary <= 0 || isNaN(salary));
+    }
   };
 
   const handleWorker = async () => {
+    const salary = parseFloat(newWorker.salary);
+
+    if (
+      !newWorker.name ||
+      !newWorker.role ||
+      !newWorker.salary ||
+      !newWorker.contact ||
+      !newWorker.shift ||
+      salary <= 0
+    ) {
+      setSalaryError(salary <= 0);
+      alert("Please fill all fields correctly. Salary must be greater than 0.");
+      return;
+    }
+
     if (actionType === "create") await createWorker(newWorker);
     else await updateWorker(updateWorkerId, newWorker);
+
     setActionType("create");
     setModalOpen(false);
     setNewWorker({
@@ -43,9 +65,10 @@ const Worker = () => {
       contact: "",
       shift: "",
     });
+    setSalaryError(false);
   };
 
-  async function handleEdit(id) {
+  const handleEdit = async (id) => {
     if (id) {
       const worker = await getWorkerById(id);
       setNewWorker({
@@ -59,9 +82,8 @@ const Worker = () => {
       setActionType("update");
       setModalOpen(true);
     }
-  }
+  };
 
-  // Animation variants for the modal
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
@@ -73,13 +95,13 @@ const Worker = () => {
   }, []);
 
   return (
-    <div className="p-6 text-[0.828rem]">
+    <div className="p-6 text-sm">
       {loading && <Loader />}
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Worker Management</h2>
         <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
+          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
           onClick={() => setModalOpen(true)}
         >
           <FaPlus className="text-sm" />
@@ -87,8 +109,8 @@ const Worker = () => {
         </button>
       </div>
 
-      <div id="overflow" className="overflow-x-auto">
-        <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
+      <div className="overflow-x-auto">
+        <table className="w-full bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
             <tr>
               <th className="px-4 py-3">Name</th>
@@ -100,15 +122,14 @@ const Worker = () => {
             </tr>
           </thead>
           <tbody>
-            {workers.length > 0 &&
+            {workers.length > 0 ? (
               workers.map((worker) => (
                 <tr key={worker._id} className="border-b hover:bg-gray-100">
                   <td className="px-4 py-3">{worker.name}</td>
                   <td className="px-4 py-3">{worker.role}</td>
-                  <td className="px-4 py-3">RS - {worker.salary}</td>
+                  <td className="px-4 py-3">Rs - {worker.salary}</td>
                   <td className="px-4 py-3">{worker.contact}</td>
                   <td className="px-4 py-3">{worker.shift}</td>
-
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
                       onClick={() => handleEdit(worker._id)}
@@ -118,9 +139,7 @@ const Worker = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (
-                          window.confirm("Are you sure you want to delete?")
-                        ) {
+                        if (window.confirm("Are you sure you want to delete?")) {
                           await deleteWorker(worker._id);
                         }
                       }}
@@ -130,17 +149,19 @@ const Worker = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="6" className="text-center py-6 text-gray-600">
+                  No workers found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {workers.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-smfont-medium">
-            No workers found
-          </div>
-        )}
       </div>
 
-      {/* Modal with Framer Motion */}
+      {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -155,12 +176,10 @@ const Worker = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.3 }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
-                {actionType === "create"
-                  ? "Add New Volunteer"
-                  : "Update Volunteer"}
+                {actionType === "create" ? "Add New Worker" : "Update Worker"}
               </h3>
               <div className="flex flex-col gap-4">
                 <input
@@ -169,13 +188,13 @@ const Worker = () => {
                   placeholder="Name"
                   value={newWorker.name}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-500"
                 />
                 <select
                   name="role"
                   value={newWorker.role}
                   onChange={handleInputChange}
-                  className="border border-gray-300 text-center bg-white p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 bg-white p-2.5 rounded-md text-center focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">__Select Role__</option>
                   <option value="Farm Manager">Farm Manager</option>
@@ -191,24 +210,30 @@ const Worker = () => {
                   placeholder="Salary"
                   value={newWorker.salary}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  className={`border p-2.5 rounded-md focus:ring-2 ${
+                    salaryError
+                      ? "border-red-500 focus:ring-red-400"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
+                {salaryError && (
+                  <p className="text-red-600 text-sm -mt-2">
+                    Salary must be greater than 0
+                  </p>
+                )}
                 <input
                   type="text"
                   name="contact"
                   placeholder="Contact"
                   value={newWorker.contact}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  className="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-500"
                 />
                 <select
                   name="shift"
                   value={newWorker.shift}
                   onChange={handleInputChange}
-                  className="border border-gray-300 text-center bg-white p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  className="border border-gray-300 bg-white p-2.5 rounded-md text-center focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">__Select Shift__</option>
                   <option value="Morning">Morning</option>
@@ -218,14 +243,17 @@ const Worker = () => {
 
                 <div className="flex justify-end gap-3 mt-6">
                   <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300"
                     onClick={handleWorker}
                   >
                     {actionType === "create" ? "Add" : "Update"}
                   </button>
                   <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
-                    onClick={() => setModalOpen(false)}
+                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300"
+                    onClick={() => {
+                      setModalOpen(false);
+                      setSalaryError(false);
+                    }}
                   >
                     Cancel
                   </button>
