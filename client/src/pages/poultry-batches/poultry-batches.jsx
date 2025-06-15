@@ -96,8 +96,8 @@ const PoultryBatches = () => {
             <tr>
               <th className="px-4 py-3">Batch Name</th>
               <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3">Quantity</th>
-              <th className="px-4 py-3">Quantity</th>
+              <th className="px-4 py-3"> Purchase Quantity</th>
+              <th className="px-4 py-3">Current Quantity</th>
               <th className="px-4 py-3">Start Date</th>
               <th className="px-4 py-3">Notes</th>
               <th className="px-4 py-3">Actions</th>
