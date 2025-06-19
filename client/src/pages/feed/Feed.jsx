@@ -123,7 +123,7 @@ const Feed = () => {
           Add Feed
         </button>
       </div>
-
+    {/* Total feed
       <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
         <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
         {Object.keys(feedTotals).length > 0 ? (
@@ -135,7 +135,7 @@ const Feed = () => {
         ) : (
           <div>No data available</div>
         )}
-      </div>
+      </div> */}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
@@ -183,6 +183,19 @@ const Feed = () => {
               ))}
           </tbody>
         </table>
+        {/* Total feed */}
+           <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
+        <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
+        {Object.keys(feedTotals).length > 0 ? (
+          Object.entries(feedTotals).map(([type, total]) => (
+            <div key={type}>
+              {type} Feed: <strong>{total} Kg</strong>
+            </div>
+          ))
+        ) : (
+          <div>No data available</div>
+        )}
+      </div>
         {feed.length === 0 && (
           <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
             No feed found
