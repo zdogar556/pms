@@ -19,6 +19,8 @@ const Payroll = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState("create");
   const [updatePayrollId, setUpdatePayrollId] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+
   const [newPayroll, setNewPayroll] = useState({
     date: "",
     eggsSold: "",
@@ -28,12 +30,29 @@ const Payroll = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+    const numericValue = parseFloat(value);
+
+    const errors = { ...validationErrors };
+    if (["eggsSold", "pricePerEgg", "totalExpense"].includes(name)) {
+      errors[name] =
+        numericValue <= 0 || isNaN(numericValue) ?
+        `${name.replace(/([A-Z])/g, ' $1')} must be greater than 0.` : "";
+    }
+
+    setValidationErrors(errors);
     setNewPayroll({ ...newPayroll, [name]: value });
   };
 
   const handleFeed = async () => {
+    const hasErrors = Object.values(validationErrors).some((err) => err);
+    if (hasErrors) {
+      alert("Please fix validation errors before submitting.");
+      return;
+    }
+
     if (actionType === "create") await createPayroll(newPayroll);
     else await updatePayroll(updatePayrollId, newPayroll);
+
     setActionType("create");
     setModalOpen(false);
     setNewPayroll({
@@ -42,15 +61,14 @@ const Payroll = () => {
       pricePerEgg: "",
       totalExpense: "",
     });
+    setValidationErrors({});
   };
 
   async function handleEdit(id) {
     if (id) {
       const payroll = await getPayrollById(id);
       setNewPayroll({
-        date: payroll.date
-          ? new Date(payroll.date).toISOString().split("T")[0]
-          : "",
+        date: payroll.date ? new Date(payroll.date).toISOString().split("T")[0] : "",
         eggsSold: payroll.eggsSold || "",
         pricePerEgg: payroll.pricePerEgg || "",
         totalExpense: payroll.totalExpense || "",
@@ -61,16 +79,15 @@ const Payroll = () => {
     }
   }
 
-  // Animation variants for the modal
+  useEffect(() => {
+    getPayrolls();
+  }, []);
+
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.95 },
   };
-
-  useEffect(() => {
-    getPayrolls();
-  }, []);
 
   return (
     <div className="p-6 text-[0.828rem]">
@@ -79,15 +96,14 @@ const Payroll = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Payroll Management</h2>
         <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
+          className="bg-[#2A2A40] text-white flex px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105"
           onClick={() => setModalOpen(true)}
         >
-          <FaPlus className="text-sm" />
-          Add Payroll
+          <FaPlus className="mr-2 mt-1" /> Add Payroll
         </button>
       </div>
 
-      <div id="overflow" className="overflow-x-auto">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
             <tr>
@@ -102,17 +118,16 @@ const Payroll = () => {
             </tr>
           </thead>
           <tbody>
-            {payrolls.length > 0 &&
+            {payrolls.length > 0 ? (
               payrolls.map((payroll) => (
                 <tr key={payroll._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3">{formatDate(payroll.date)}</td>
-                  <td className="px-4 py-3">{payroll.eggsSold}</td>
-                  <td className="px-4 py-3">RS - {payroll.pricePerEgg}</td>
-                  <td className="px-4 py-3">RS - {payroll.totalExpense}</td>
-                  <td className="px-4 py-3">RS - {payroll.totalRevenue}</td>
-                  <td className="px-4 py-3">RS - {payroll.totalSalaries}</td>
-                  <td className="px-4 py-3">RS - {payroll.netProfit}</td>
-
+                  <td className="px-4 py-3 text-center ">{formatDate(payroll.date)}</td>
+                  <td className="px-4 py-3 text-center">{payroll.eggsSold}</td>
+                  <td className="px-4 py-3 text-center">RS - {payroll.pricePerEgg}</td>
+                  <td className="px-4 py-3 text-center">RS - {payroll.totalExpense}</td>
+                  <td className="px-4 py-3 text-center">RS - {payroll.totalRevenue}</td>
+                  <td className="px-4 py-3 text-center">RS - {payroll.totalSalaries}</td>
+                  <td className="px-4 py-3 text-center">RS - {payroll.netProfit}</td>
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
                       onClick={() => handleEdit(payroll._id)}
@@ -122,9 +137,7 @@ const Payroll = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (
-                          window.confirm("Are you sure you want to delete?")
-                        ) {
+                        if (window.confirm("Are you sure you want to delete?")) {
                           await deletePayroll(payroll._id);
                         }
                       }}
@@ -134,24 +147,25 @@ const Payroll = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="8" className="text-center py-8 text-sm font-medium">
+                  No payrolls found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {payrolls.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-smfont-medium">
-            No payrolls found
-          </div>
-        )}
       </div>
 
-      {/* Modal with Framer Motion */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
           >
             <motion.div
               className="bg-white p-8 rounded-lg w-96 shadow-xl"
@@ -171,45 +185,55 @@ const Payroll = () => {
                   name="date"
                   value={newPayroll.date}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2.5 rounded-md"
                   required
                 />
-                <input
-                  type="number"
-                  name="eggsSold"
-                  placeholder="Eggs Sold"
-                  value={newPayroll.eggsSold}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-                <input
-                  type="number"
-                  name="pricePerEgg"
-                  placeholder="Price Per Egg"
-                  value={newPayroll.pricePerEgg}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-                <input
-                  type="number"
-                  name="totalExpense"
-                  placeholder="Total Expenses"
-                  value={newPayroll.totalExpense}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <div>
+                  <input
+                    type="number"
+                    name="eggsSold"
+                    placeholder="Eggs Sold"
+                    value={newPayroll.eggsSold}
+                    onChange={handleInputChange}
+                    className="border border-gray-300 p-2.5 rounded-md w-full"
+                    required
+                  />
+                  {validationErrors.eggsSold && <p className="text-red-500 text-xs mt-1">{validationErrors.eggsSold}</p>}
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    name="pricePerEgg"
+                    placeholder="Price Per Egg"
+                    value={newPayroll.pricePerEgg}
+                    onChange={handleInputChange}
+                    className="border border-gray-300 p-2.5 rounded-md w-full"
+                    required
+                  />
+                  {validationErrors.pricePerEgg && <p className="text-red-500 text-xs mt-1">{validationErrors.pricePerEgg}</p>}
+                </div>
+                <div>
+                  <input
+                    type="number"
+                    name="totalExpense"
+                    placeholder="Total Expenses"
+                    value={newPayroll.totalExpense}
+                    onChange={handleInputChange}
+                    className="border border-gray-300 p-2.5 rounded-md w-full"
+                    required
+                  />
+                  {validationErrors.totalExpense && <p className="text-red-500 text-xs mt-1">{validationErrors.totalExpense}</p>}
+                </div>
+
                 <div className="flex justify-end gap-3 mt-6">
                   <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                     onClick={handleFeed}
                   >
                     {actionType === "create" ? "Add" : "Update"}
                   </button>
                   <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600"
                     onClick={() => setModalOpen(false)}
                   >
                     Cancel
