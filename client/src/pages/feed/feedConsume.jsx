@@ -19,33 +19,61 @@ const FeedConsume = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState("create");
   const [updateId, setUpdateId] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
   const [newConsumption, setNewConsumption] = useState({
     date: "",
     feedType: "",
     quantityUsed: "",
-    // cost: "",
     ConsumedBy: "",
     notes: "",
   });
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewConsumption({ ...newConsumption, [name]: value });
+    const updated = { ...newConsumption, [name]: value };
+    setNewConsumption(updated);
+
+    // Live validation for future date
+    const errors = { ...validationErrors };
+    if (name === "date") {
+      const selected = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selected > today) {
+        errors.date = "Future date is not allowed.";
+      } else {
+        delete errors.date;
+      }
+    }
+    setValidationErrors(errors);
   };
 
   const handleSubmit = async () => {
+    const errors = {};
+    const selectedDate = new Date(newConsumption.date);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (!newConsumption.date) errors.date = "Date is required.";
+    else if (selectedDate > today) errors.date = "Future date is not allowed.";
+
+    setValidationErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     if (actionType === "create") await createFeedConsumption(newConsumption);
     else await updateFeedConsumption(updateId, newConsumption);
+
     setActionType("create");
     setModalOpen(false);
     setNewConsumption({
       date: "",
       feedType: "",
-      quantity: "",
-      // cost: "",
+      quantityUsed: "",
       ConsumedBy: "",
       notes: "",
     });
+    setValidationErrors({});
+    getFeedConsumptions();
   };
 
   async function handleEdit(id) {
@@ -56,9 +84,8 @@ const FeedConsume = () => {
           ? new Date(consumption.date).toISOString().split("T")[0]
           : "",
         feedType: consumption.feedType || "",
-        quantity: consumption.quantity || "",
-        // cost: feed.cost || "",
-        ConsumedBy: consumption.supplier || "",
+        quantityUsed: consumption.quantityUsed || "",
+        ConsumedBy: consumption.consumedBy || "",
         notes: consumption.notes || "",
       });
       setUpdateId(consumption._id);
@@ -67,21 +94,15 @@ const FeedConsume = () => {
     }
   }
 
-  // Animation variants for the modal
+  useEffect(() => {
+    getFeedConsumptions();
+  }, []);
+
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
     exit: { opacity: 0, scale: 0.95 },
   };
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const result = await getFeedConsumptions();
-      console.log(result, "result");
-    };
-    fetchData();
-  }, []);
-
 
   return (
     <div className="p-6 text-[0.828rem]">
@@ -104,7 +125,6 @@ const FeedConsume = () => {
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Feed Type</th>
               <th className="px-4 py-3">Quantity(kg)</th>
-              {/* <th className="px-4 py-3">Cost</th> */}
               <th className="px-4 py-3">Consumed By</th>
               <th className="px-4 py-3">Notes</th>
               <th className="px-4 py-3">Actions</th>
@@ -112,29 +132,25 @@ const FeedConsume = () => {
           </thead>
           <tbody>
             {Array.isArray(feedConsumptions) && feedConsumptions.length > 0 ? (
-              feedConsumptions.map((feedConsumption) => (
-                <tr
-                  key={feedConsumptions._id}
-                  className="border-b hover:bg-gray-100"
-                >
-                  <td className="px-4 py-3 text-center">{formatDate(feedConsumption.date)}</td>
-                  <td className="px-4 py-3 text-center">{feedConsumption.feedType}</td>
-                  <td className="pl-9 py-3 text-center">{feedConsumption.quantityUsed}</td>
-                  <td className="px-4 py-3 text-center">{feedConsumption.consumedBy}</td>
-                  <td className="px-4 py-3 text-center">{feedConsumption.notes}</td>
+              feedConsumptions.map((item) => (
+                <tr key={item._id} className="border-b hover:bg-gray-100">
+                  <td className="px-4 py-3 text-center">{formatDate(item.date)}</td>
+                  <td className="px-4 py-3 text-center">{item.feedType}</td>
+                  <td className="pl-9 py-3 text-center">{item.quantityUsed}</td>
+                  <td className="px-4 py-3 text-center">{item.consumedBy}</td>
+                  <td className="px-4 py-3 text-center">{item.notes}</td>
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
-                      onClick={() => handleEdit(feedConsumption._id)}
+                      onClick={() => handleEdit(item._id)}
                       className="text-blue-500 hover:text-blue-700"
                     >
                       <FaEdit />
                     </button>
                     <button
                       onClick={async () => {
-                        if (
-                          window.confirm("Are you sure you want to delete?")
-                        ) {
-                          await deleteFeedConsumption(feedConsumption._id);
+                        if (window.confirm("Are you sure you want to delete?")) {
+                          await deleteFeedConsumption(item._id);
+                          getFeedConsumptions();
                         }
                       }}
                       className="text-red-500 hover:text-red-700"
@@ -153,14 +169,8 @@ const FeedConsume = () => {
             )}
           </tbody>
         </table>
-        {feedConsumptions?.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
-            No feed consumption records found
-          </div>
-        )}
       </div>
 
-      {/* Modal with Framer Motion */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -178,20 +188,28 @@ const FeedConsume = () => {
               transition={{ duration: 0.3, ease: "easeInOut" }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
-                {actionType === "create"
-                  ? "Record Consumption"
-                  : "Update Consumption"}
+                {actionType === "create" ? "Record Consumption" : "Update Consumption"}
               </h3>
 
               <div className="flex flex-col gap-4">
-                <input
-                  type="date"
-                  name="date"
-                  value={newConsumption.date}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <div className="flex flex-col">
+                  <input
+                    type="date"
+                    name="date"
+                    value={newConsumption.date}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.date
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {validationErrors.date && (
+                    <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
+                  )}
+                </div>
+
                 <select
                   name="feedType"
                   value={newConsumption.feedType}
@@ -217,15 +235,7 @@ const FeedConsume = () => {
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
-                {/* <input
-                  type="number"
-                  name="cost"
-                  placeholder="Cost"
-                  value={newFeed.cost}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                /> */}
+
                 <input
                   type="text"
                   name="ConsumedBy"
@@ -235,6 +245,7 @@ const FeedConsume = () => {
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+
                 <input
                   type="text"
                   name="notes"
