@@ -64,34 +64,31 @@ const Production = () => {
   const handleProduction = async () => {
     if (Object.values(errors).some((e) => e)) return;
 
-    if (actionType === "create") await createProduction(newProduction);
-    else await updateProduction(updateProductionId, newProduction);
+    if (actionType === "create") {
+      await createProduction(newProduction);
+    } else {
+      await updateProduction(updateProductionId, newProduction);
+    }
 
     setActionType("create");
     setModalOpen(false);
-    setNewProduction({
-      date: "",
-      totalEggs: "",
-      damagedEggs: "",
-    });
+    setNewProduction({ date: "", totalEggs: "", damagedEggs: "" });
     setErrors({});
   };
 
-  async function handleEdit(id) {
-    if (id) {
-      const production = await getProductionById(id);
-      setNewProduction({
-        date: production.date
-          ? new Date(production.date).toISOString().split("T")[0]
-          : "",
-        totalEggs: production.totalEggs || "",
-        damagedEggs: production.damagedEggs || "",
-      });
-      setUpdateProductionId(production._id);
-      setActionType("update");
-      setModalOpen(true);
-    }
-  }
+  const handleEdit = async (id) => {
+    const production = await getProductionById(id);
+    setNewProduction({
+      date: production.date
+        ? new Date(production.date).toISOString().split("T")[0]
+        : "",
+      totalEggs: production.totalEggs || "",
+      damagedEggs: production.damagedEggs || "",
+    });
+    setUpdateProductionId(production._id);
+    setActionType("update");
+    setModalOpen(true);
+  };
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -111,31 +108,49 @@ const Production = () => {
         <h2 className="text-xl font-semibold">Production Management</h2>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setActionType("create");
+            setNewProduction({ date: "", totalEggs: "", damagedEggs: "" });
+            setErrors({});
+            setModalOpen(true);
+          }}
         >
           <FaPlus className="text-sm" />
-          Add production
+          Add Production
         </button>
       </div>
 
-      <div id="overflow" className="overflow-x-auto">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
             <tr>
               <th className="px-4 py-3">Production Date</th>
               <th className="px-4 py-3">Total Eggs</th>
               <th className="px-4 py-3">Damaged Eggs</th>
+              <th className="px-4 py-3">Good Eggs</th> {/* New Column */}
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {productions.length > 0 &&
+            {productions.length > 0 ? (
               productions.map((production) => (
-                <tr key={production._id} className="border-b hover:bg-gray-100">
-                  <td className="pl-16 py-3">{formatDate(production.date)}</td>
-                  <td className="pl-14 py-3">{production.totalEggs} Eggs</td>
-                  <td className="pl-14 py-3">{production.damagedEggs} Eggs</td>
-                  <td className="pl-12 py-3 flex space-x-2">
+                <tr
+                  key={production._id}
+                  className="border-b hover:bg-gray-100"
+                >
+                  <td className="px-4 py-3 text-center">
+                    {formatDate(production.date)}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {production.totalEggs} Eggs
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {production.damagedEggs} Eggs
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {production.totalEggs - production.damagedEggs} Eggs
+                  </td>
+                  <td className="px-4 py-3 flex gap-2 text-center">
                     <button
                       onClick={() => handleEdit(production._id)}
                       className="text-blue-500 hover:text-blue-700"
@@ -144,7 +159,9 @@ const Production = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (window.confirm("Are you sure you want to delete?")) {
+                        if (
+                          window.confirm("Are you sure you want to delete?")
+                        ) {
                           await deleteProduction(production._id);
                         }
                       }}
@@ -154,14 +171,16 @@ const Production = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="5" className="text-center py-4">
+                  No production records found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {productions.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
-            No production found
-          </div>
-        )}
       </div>
 
       {/* Modal */}
