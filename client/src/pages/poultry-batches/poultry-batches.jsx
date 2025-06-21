@@ -12,8 +12,6 @@ const PoultryBatches = () => {
     updateBatch,
     deleteBatch,
     getBatchById,
-    poultryRecords,
-    getPoultryRecords
   } = useService();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -22,33 +20,60 @@ const PoultryBatches = () => {
     type: "",
     quantity: "",
     startDate: "",
-    notes: ""
+    notes: "",
   });
   const [editingId, setEditingId] = useState(null);
+  const [validationError, setValidationError] = useState("");
 
   const handleInput = (e) => {
     const { name, value } = e.target;
+
     if (name === "quantity") {
-      // Ensure quantity is a positive number
       const numValue = parseInt(value);
       if (isNaN(numValue) || numValue < 0) return;
     }
+
+    if (name === "startDate") {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        setValidationError("Future dates are not allowed.");
+      } else {
+        setValidationError("");
+      }
+    }
+
     setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async () => {
+    if (validationError) {
+      alert("Please fix the validation errors before submitting.");
+      return;
+    }
+
     if (editingId) {
       await updateBatch(editingId, formData);
     } else {
       await createBatch(formData);
     }
+
     setModalOpen(false);
     setEditingId(null);
     resetForm();
+    getBatches();
   };
 
   const resetForm = () => {
-    setFormData({ batchName: "", type: "", quantity: "", startDate: "", notes: "" });
+    setFormData({
+      batchName: "",
+      type: "",
+      quantity: "",
+      startDate: "",
+      notes: "",
+    });
+    setValidationError("");
   };
 
   const openEdit = async (id) => {
@@ -58,7 +83,7 @@ const PoultryBatches = () => {
       type: batch.type,
       quantity: batch.quantity,
       startDate: new Date(batch.startDate).toISOString().split("T")[0],
-      notes: batch.notes
+      notes: batch.notes,
     });
     setEditingId(id);
     setModalOpen(true);
@@ -71,7 +96,7 @@ const PoultryBatches = () => {
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1 },
-    exit: { opacity: 0, scale: 0.95 }
+    exit: { opacity: 0, scale: 0.95 },
   };
 
   return (
@@ -96,7 +121,7 @@ const PoultryBatches = () => {
             <tr>
               <th className="px-4 py-3">Batch Name</th>
               <th className="px-4 py-3">Type</th>
-              <th className="px-4 py-3"> Purchase Quantity</th>
+              <th className="px-4 py-3">Purchase Quantity</th>
               <th className="px-4 py-3">Current Quantity</th>
               <th className="px-4 py-3">Start Date</th>
               <th className="px-4 py-3">Notes</th>
@@ -111,7 +136,9 @@ const PoultryBatches = () => {
                   <td className="px-4 py-3 text-center">{b.type}</td>
                   <td className="px-4 py-3 text-center">{b.quantity}</td>
                   <td className="px-4 py-3 text-center">{b.currentQuantity}</td>
-                  <td className="px-4 py-3 text-center">{new Date(b.startDate).toLocaleDateString()}</td>
+                  <td className="px-4 py-3 text-center">
+                    {new Date(b.startDate).toLocaleDateString()}
+                  </td>
                   <td className="px-4 py-3 text-center">{b.notes}</td>
                   <td className="px-4 py-3 text-center flex space-x-2">
                     <Link
@@ -142,7 +169,7 @@ const PoultryBatches = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="6" className="text-center py-8 text-sm font-medium">
+                <td colSpan="7" className="text-center py-8 text-sm font-medium">
                   No batches found.
                 </td>
               </tr>
@@ -200,13 +227,20 @@ const PoultryBatches = () => {
                   onChange={handleInput}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
-                <input
-                  type="date"
-                  name="startDate"
-                  value={formData.startDate}
-                  onChange={handleInput}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+                <div>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={formData.startDate}
+                    onChange={handleInput}
+                    className={`border p-2.5 rounded-md w-full ${
+                      validationError ? "border-red-500" : "border-gray-300"
+                    }`}
+                  />
+                  {validationError && (
+                    <p className="text-red-500 text-xs mt-1">{validationError}</p>
+                  )}
+                </div>
                 <input
                   type="text"
                   name="notes"
@@ -218,13 +252,13 @@ const PoultryBatches = () => {
 
                 <div className="flex justify-end gap-3 mt-6">
                   <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                     onClick={handleSubmit}
                   >
                     {editingId ? "Update" : "Add"}
                   </button>
                   <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600"
                     onClick={() => setModalOpen(false)}
                   >
                     Cancel

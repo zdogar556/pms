@@ -31,12 +31,24 @@ const Payroll = () => {
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const numericValue = parseFloat(value);
-
     const errors = { ...validationErrors };
+
+    if (name === "date") {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        errors.date = "Future dates are not allowed.";
+      } else {
+        delete errors.date;
+      }
+    }
+
     if (["eggsSold", "pricePerEgg", "totalExpense"].includes(name)) {
       errors[name] =
-        numericValue <= 0 || isNaN(numericValue) ?
-        `${name.replace(/([A-Z])/g, ' $1')} must be greater than 0.` : "";
+        numericValue <= 0 || isNaN(numericValue)
+          ? `${name.replace(/([A-Z])/g, " $1")} must be greater than 0.`
+          : "";
     }
 
     setValidationErrors(errors);
@@ -62,6 +74,7 @@ const Payroll = () => {
       totalExpense: "",
     });
     setValidationErrors({});
+    getPayrolls();
   };
 
   async function handleEdit(id) {
@@ -121,7 +134,7 @@ const Payroll = () => {
             {payrolls.length > 0 ? (
               payrolls.map((payroll) => (
                 <tr key={payroll._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3 text-center ">{formatDate(payroll.date)}</td>
+                  <td className="px-4 py-3 text-center">{formatDate(payroll.date)}</td>
                   <td className="px-4 py-3 text-center">{payroll.eggsSold}</td>
                   <td className="px-4 py-3 text-center">RS - {payroll.pricePerEgg}</td>
                   <td className="px-4 py-3 text-center">RS - {payroll.totalExpense}</td>
@@ -139,6 +152,7 @@ const Payroll = () => {
                       onClick={async () => {
                         if (window.confirm("Are you sure you want to delete?")) {
                           await deletePayroll(payroll._id);
+                          getPayrolls();
                         }
                       }}
                       className="text-red-500 hover:text-red-700"
@@ -180,14 +194,22 @@ const Payroll = () => {
               </h3>
 
               <div className="flex flex-col gap-4">
-                <input
-                  type="date"
-                  name="date"
-                  value={newPayroll.date}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md"
-                  required
-                />
+                <div>
+                  <input
+                    type="date"
+                    name="date"
+                    value={newPayroll.date}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md w-full ${
+                      validationErrors.date ? "border-red-500" : "border-gray-300"
+                    }`}
+                    required
+                  />
+                  {validationErrors.date && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.date}</p>
+                  )}
+                </div>
+
                 <div>
                   <input
                     type="number"
@@ -198,8 +220,11 @@ const Payroll = () => {
                     className="border border-gray-300 p-2.5 rounded-md w-full"
                     required
                   />
-                  {validationErrors.eggsSold && <p className="text-red-500 text-xs mt-1">{validationErrors.eggsSold}</p>}
+                  {validationErrors.eggsSold && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.eggsSold}</p>
+                  )}
                 </div>
+
                 <div>
                   <input
                     type="number"
@@ -210,8 +235,11 @@ const Payroll = () => {
                     className="border border-gray-300 p-2.5 rounded-md w-full"
                     required
                   />
-                  {validationErrors.pricePerEgg && <p className="text-red-500 text-xs mt-1">{validationErrors.pricePerEgg}</p>}
+                  {validationErrors.pricePerEgg && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.pricePerEgg}</p>
+                  )}
                 </div>
+
                 <div>
                   <input
                     type="number"
@@ -222,7 +250,9 @@ const Payroll = () => {
                     className="border border-gray-300 p-2.5 rounded-md w-full"
                     required
                   />
-                  {validationErrors.totalExpense && <p className="text-red-500 text-xs mt-1">{validationErrors.totalExpense}</p>}
+                  {validationErrors.totalExpense && (
+                    <p className="text-red-500 text-xs mt-1">{validationErrors.totalExpense}</p>
+                  )}
                 </div>
 
                 <div className="flex justify-end gap-3 mt-6">
