@@ -33,11 +33,40 @@ const Feed = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewFeed({ ...newFeed, [name]: value });
+    const updatedFeed = { ...newFeed, [name]: value };
+    setNewFeed(updatedFeed);
+
+    const errors = { ...validationErrors };
+
+    if (name === "date") {
+      const selected = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selected > today) {
+        errors.date = "Future date is not allowed.";
+      } else {
+        delete errors.date;
+      }
+    }
+
+    if (name === "quantity" && Number(value) <= 0) {
+      errors.quantity = "Quantity must be greater than 0.";
+    } else if (name === "quantity") {
+      delete errors.quantity;
+    }
+
+    if (name === "cost" && Number(value) <= 0) {
+      errors.cost = "Cost must be greater than 0.";
+    } else if (name === "cost") {
+      delete errors.cost;
+    }
+
+    setValidationErrors(errors);
   };
 
   const handleFeed = async () => {
     const errors = {};
+
     if (!newFeed.feedType) errors.feedType = "Feed type is required.";
     if (!newFeed.date) errors.date = "Date is required.";
     if (Number(newFeed.quantity) <= 0) errors.quantity = "Quantity must be greater than 0.";
@@ -123,19 +152,6 @@ const Feed = () => {
           Add Feed
         </button>
       </div>
-    {/* Total feed
-      <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
-        <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
-        {Object.keys(feedTotals).length > 0 ? (
-          Object.entries(feedTotals).map(([type, total]) => (
-            <div key={type}>
-              {type} Feed: <strong>{total} Kg</strong>
-            </div>
-          ))
-        ) : (
-          <div>No data available</div>
-        )}
-      </div> */}
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
@@ -154,12 +170,12 @@ const Feed = () => {
             {feed.length > 0 &&
               feed.map((f) => (
                 <tr key={f._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3">{formatDate(f.date)}</td>
-                  <td className="px-4 py-3">{f.feedType}</td>
-                  <td className="pl-9 py-3">{f.quantity}</td>
-                  <td className="px-4 py-3">RS - {f.cost}</td>
-                  <td className="px-4 py-3">{f.supplier}</td>
-                  <td className="px-4 py-3">{f.notes}</td>
+                  <td className="px-4 py-3 text-center">{formatDate(f.date)}</td>
+                  <td className="px-4 py-3 text-center">{f.feedType}</td>
+                  <td className="pl-9 py-3 text-center">{f.quantity}</td>
+                  <td className="px-4 py-3 text-center">RS - {f.cost}</td>
+                  <td className="px-4 py-3 text-center">{f.supplier}</td>
+                  <td className="px-4 py-3 text-center">{f.notes}</td>
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
                       onClick={() => handleEdit(f._id)}
@@ -183,19 +199,20 @@ const Feed = () => {
               ))}
           </tbody>
         </table>
-        {/* Total feed */}
-           <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
-        <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
-        {Object.keys(feedTotals).length > 0 ? (
-          Object.entries(feedTotals).map(([type, total]) => (
-            <div key={type}>
-              {type} Feed: <strong>{total} Kg</strong>
-            </div>
-          ))
-        ) : (
-          <div>No data available</div>
-        )}
-      </div>
+
+        <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
+          <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
+          {Object.keys(feedTotals).length > 0 ? (
+            Object.entries(feedTotals).map(([type, total]) => (
+              <div key={type}>
+                {type} Feed: <strong>{total} Kg</strong>
+              </div>
+            ))
+          ) : (
+            <div>No data available</div>
+          )}
+        </div>
+
         {feed.length === 0 && (
           <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
             No feed found
@@ -223,14 +240,25 @@ const Feed = () => {
                 {actionType === "create" ? "Add New Feed" : "Update Feed"}
               </h3>
               <div className="flex flex-col gap-4">
-                <input
-                  type="date"
-                  name="date"
-                  value={newFeed.date}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+
+                <div className="flex flex-col">
+                  <input
+                    type="date"
+                    name="date"
+                    value={newFeed.date}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.date
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {validationErrors.date && (
+                    <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
+                  )}
+                </div>
+
                 <select
                   name="feedType"
                   value={newFeed.feedType}
@@ -246,34 +274,45 @@ const Feed = () => {
                   <option value="Broiler">Broiler Feed</option>
                   <option value="Medicated">Medicated Feed</option>
                 </select>
-                <input
-                  type="number"
-                  name="quantity"
-                  placeholder="Quantity in Kgs"
-                  value={newFeed.quantity}
-                  onChange={handleInputChange}
-                  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    validationErrors.quantity ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
-                {validationErrors.quantity && (
-                  <p className="text-red-600 text-xs -mt-2">{validationErrors.quantity}</p>
-                )}
-                <input
-                  type="number"
-                  name="cost"
-                  placeholder="Cost"
-                  value={newFeed.cost}
-                  onChange={handleInputChange}
-                  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    validationErrors.cost ? "border-red-500" : "border-gray-300"
-                  }`}
-                  required
-                />
-                {validationErrors.cost && (
-                  <p className="text-red-600 text-xs -mt-2">{validationErrors.cost}</p>
-                )}
+
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    name="quantity"
+                    placeholder="Quantity in Kgs"
+                    value={newFeed.quantity}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.quantity
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {validationErrors.quantity && (
+                    <p className="text-red-600 text-xs mt-1">{validationErrors.quantity}</p>
+                  )}
+                </div>
+
+                <div className="flex flex-col">
+                  <input
+                    type="number"
+                    name="cost"
+                    placeholder="Cost"
+                    value={newFeed.cost}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      validationErrors.cost
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {validationErrors.cost && (
+                    <p className="text-red-600 text-xs mt-1">{validationErrors.cost}</p>
+                  )}
+                </div>
+
                 <input
                   type="text"
                   name="supplier"
@@ -290,8 +329,8 @@ const Feed = () => {
                   value={newFeed.notes}
                   onChange={handleInputChange}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 />
+
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"

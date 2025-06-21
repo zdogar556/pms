@@ -32,6 +32,15 @@ const Production = () => {
     const total = parseInt(updatedProduction.totalEggs || 0);
     const damaged = parseInt(updatedProduction.damagedEggs || 0);
 
+    if (name === "date") {
+      const selectedDate = new Date(value);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (selectedDate > today) {
+        error = "Date is not Valid.";
+      }
+    }
+
     if (name === "totalEggs") {
       if (value <= 0) {
         error = "Total eggs must be greater than 0.";
@@ -58,7 +67,7 @@ const Production = () => {
     const { name, value } = e.target;
     const updatedProduction = { ...newProduction, [name]: value };
     setNewProduction(updatedProduction);
-    validate(name, parseInt(value), updatedProduction);
+    validate(name, name === "date" ? value : parseInt(value), updatedProduction);
   };
 
   const handleProduction = async () => {
@@ -127,7 +136,7 @@ const Production = () => {
               <th className="px-4 py-3">Production Date</th>
               <th className="px-4 py-3">Total Eggs</th>
               <th className="px-4 py-3">Damaged Eggs</th>
-              <th className="px-4 py-3">Good Eggs</th> {/* New Column */}
+              <th className="px-4 py-3">Good Eggs</th>
               <th className="px-4 py-3">Actions</th>
             </tr>
           </thead>
@@ -207,14 +216,25 @@ const Production = () => {
               </h3>
 
               <div className="flex flex-col gap-4">
-                <input
-                  type="date"
-                  name="date"
-                  value={newProduction.date}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                <div className="flex flex-col">
+                  <input
+                    type="date"
+                    name="date"
+                    value={newProduction.date}
+                    onChange={handleInputChange}
+                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                      errors.date
+                        ? "border-red-500 focus:ring-red-500"
+                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
+                    }`}
+                    required
+                  />
+                  {errors.date && (
+                    <span className="text-red-500 text-sm mt-1">
+                      {errors.date}
+                    </span>
+                  )}
+                </div>
 
                 <div className="flex flex-col">
                   <input
