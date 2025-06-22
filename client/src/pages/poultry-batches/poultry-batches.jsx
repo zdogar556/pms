@@ -25,6 +25,12 @@ const PoultryBatches = () => {
   const [editingId, setEditingId] = useState(null);
   const [validationError, setValidationError] = useState("");
 
+  const normalizeDate = (dateStr) => {
+    const date = new Date(dateStr);
+    date.setHours(0, 0, 0, 0);
+    return date;
+  };
+
   const handleInput = (e) => {
     const { name, value } = e.target;
 
@@ -34,7 +40,7 @@ const PoultryBatches = () => {
     }
 
     if (name === "startDate") {
-      const selectedDate = new Date(value);
+      const selectedDate = normalizeDate(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate > today) {

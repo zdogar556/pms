@@ -44,6 +44,7 @@ const PoultryBatchRecord = () => {
     let error = "";
     if (field === "date") {
       const selected = new Date(value);
+      selected.setHours(0, 0, 0, 0);
       if (selected > today) {
         error = "Date cannot be in the future.";
       }
@@ -122,7 +123,7 @@ const PoultryBatchRecord = () => {
           )}
         </div>
         <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none flex items-center gap-2"
+          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
           onClick={() => {
             resetForm();
             setModalOpen(true);
@@ -154,7 +155,7 @@ const PoultryBatchRecord = () => {
                     {record.expiredCount}
                   </td>
                   <td className="px-4 py-3 text-center">{record.notes}</td>
-                  <td className="px-4 py-3 text-center flex space-x-2">
+                  <td className="px-4 py-3 text-center flex space-x-2 justify-center">
                     <button
                       onClick={() => openEdit(record)}
                       className="text-blue-500 hover:text-blue-700"
@@ -162,10 +163,12 @@ const PoultryBatchRecord = () => {
                       <FaEdit />
                     </button>
                     <button
-                      onClick={() =>
-                        window.confirm("Are you sure?") &&
-                        deletePoultryRecord(record._id)
-                      }
+                      onClick={async () => {
+                        if (window.confirm("Are you sure you want to delete?")) {
+                          await deletePoultryRecord(record._id);
+                          await getPoultryRecords();
+                        }
+                      }}
                       className="text-red-500 hover:text-red-700"
                     >
                       <FaTrash />
