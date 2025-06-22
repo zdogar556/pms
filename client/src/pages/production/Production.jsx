@@ -34,10 +34,13 @@ const Production = () => {
 
     if (name === "date") {
       const selectedDate = new Date(value);
+      selectedDate.setHours(0, 0, 0, 0);
+
       const today = new Date();
       today.setHours(0, 0, 0, 0);
-      if (selectedDate > today) {
-        error = "Date is not Valid.";
+
+      if (selectedDate.getTime() > today.getTime()) {
+        error = "Future dates are not allowed.";
       }
     }
 

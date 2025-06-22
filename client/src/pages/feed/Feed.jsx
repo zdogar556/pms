@@ -41,6 +41,7 @@ const Feed = () => {
     if (name === "date") {
       const selected = new Date(value);
       const today = new Date();
+      selected.setHours(0, 0, 0, 0);
       today.setHours(0, 0, 0, 0);
       if (selected > today) {
         errors.date = "Future date is not allowed.";
@@ -146,7 +147,18 @@ const Feed = () => {
         <h2 className="text-xl font-semibold">Feed Management</h2>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setActionType("create");
+            setNewFeed({
+              date: "",
+              feedType: "",
+              quantity: "",
+              cost: "",
+              supplier: "",
+              notes: "",
+            });
+            setModalOpen(true);
+          }}
         >
           <FaPlus className="text-sm" />
           Add Feed

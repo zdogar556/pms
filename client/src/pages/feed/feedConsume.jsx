@@ -28,15 +28,21 @@ const FeedConsume = () => {
     notes: "",
   });
 
+  const normalizeDate = (dateStr) => {
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const updated = { ...newConsumption, [name]: value };
     setNewConsumption(updated);
 
-    // Live validation for future date
     const errors = { ...validationErrors };
+
     if (name === "date") {
-      const selected = new Date(value);
+      const selected = normalizeDate(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selected > today) {
@@ -45,12 +51,13 @@ const FeedConsume = () => {
         delete errors.date;
       }
     }
+
     setValidationErrors(errors);
   };
 
   const handleSubmit = async () => {
     const errors = {};
-    const selectedDate = new Date(newConsumption.date);
+    const selectedDate = normalizeDate(newConsumption.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -76,23 +83,21 @@ const FeedConsume = () => {
     getFeedConsumptions();
   };
 
-  async function handleEdit(id) {
-    if (id) {
-      const consumption = await getFeedConsumptionById(id);
-      setNewConsumption({
-        date: consumption.date
-          ? new Date(consumption.date).toISOString().split("T")[0]
-          : "",
-        feedType: consumption.feedType || "",
-        quantityUsed: consumption.quantityUsed || "",
-        ConsumedBy: consumption.consumedBy || "",
-        notes: consumption.notes || "",
-      });
-      setUpdateId(consumption._id);
-      setActionType("update");
-      setModalOpen(true);
-    }
-  }
+  const handleEdit = async (id) => {
+    const consumption = await getFeedConsumptionById(id);
+    setNewConsumption({
+      date: consumption.date
+        ? new Date(consumption.date).toISOString().split("T")[0]
+        : "",
+      feedType: consumption.feedType || "",
+      quantityUsed: consumption.quantityUsed || "",
+      ConsumedBy: consumption.consumedBy || "",
+      notes: consumption.notes || "",
+    });
+    setUpdateId(consumption._id);
+    setActionType("update");
+    setModalOpen(true);
+  };
 
   useEffect(() => {
     getFeedConsumptions();
@@ -111,14 +116,25 @@ const FeedConsume = () => {
         <h2 className="text-xl font-semibold">Feed Consumption</h2>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
-          onClick={() => setModalOpen(true)}
+          onClick={() => {
+            setModalOpen(true);
+            setActionType("create");
+            setNewConsumption({
+              date: "",
+              feedType: "",
+              quantityUsed: "",
+              ConsumedBy: "",
+              notes: "",
+            });
+            setValidationErrors({});
+          }}
         >
           <FaPlus className="text-sm" />
           Record Consumption
         </button>
       </div>
 
-      <div id="overflow" className="overflow-x-auto">
+      <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
             <tr>

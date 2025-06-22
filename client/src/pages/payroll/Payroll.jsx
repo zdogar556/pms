@@ -28,13 +28,19 @@ const Payroll = () => {
     totalExpense: "",
   });
 
+  const normalizeDate = (dateStr) => {
+    const d = new Date(dateStr);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const numericValue = parseFloat(value);
     const errors = { ...validationErrors };
 
     if (name === "date") {
-      const selectedDate = new Date(value);
+      const selectedDate = normalizeDate(value);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       if (selectedDate > today) {
