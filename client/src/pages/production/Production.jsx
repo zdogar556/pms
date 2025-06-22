@@ -109,6 +109,14 @@ const Production = () => {
     getProductions();
   }, []);
 
+  // Calculate Summary Totals
+  const totalEggs = productions.reduce((sum, p) => sum + Number(p.totalEggs), 0);
+  const damagedEggs = productions.reduce((sum, p) => sum + Number(p.damagedEggs), 0);
+  const goodEggs = productions.reduce(
+    (sum, p) => sum + (Number(p.totalEggs) - Number(p.damagedEggs)),
+    0
+  );
+
   return (
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
@@ -127,6 +135,22 @@ const Production = () => {
           <FaPlus className="text-sm" />
           Add Production
         </button>
+      </div>
+
+      {/* Summary Box */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-blue-600">
+          <h4 className="font-semibold text-gray-700">Total Eggs</h4>
+          <p className="text-2xl font-bold text-blue-600">{totalEggs} Eggs</p>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-red-500">
+          <h4 className="font-semibold text-gray-700">Damaged Eggs</h4>
+          <p className="text-2xl font-bold text-red-500">{damagedEggs} Eggs</p>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-green-600">
+          <h4 className="font-semibold text-gray-700">Good Eggs</h4>
+          <p className="text-2xl font-bold text-green-600">{goodEggs} Eggs</p>
+        </div>
       </div>
 
       <div className="overflow-x-auto">
@@ -168,9 +192,7 @@ const Production = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (
-                          window.confirm("Are you sure you want to delete?")
-                        ) {
+                        if (window.confirm("Are you sure you want to delete?")) {
                           await deleteProduction(production._id);
                         }
                       }}
