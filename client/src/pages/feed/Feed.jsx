@@ -19,9 +19,7 @@ const Feed = () => {
   const [isModalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState("create");
   const [updateFeedId, setUpdateFeedId] = useState(null);
-  const [feedTotals, setFeedTotals] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
-
   const [newFeed, setNewFeed] = useState({
     date: "",
     feedType: "",
@@ -67,14 +65,12 @@ const Feed = () => {
 
   const handleFeed = async () => {
     const errors = {};
-
     if (!newFeed.feedType) errors.feedType = "Feed type is required.";
     if (!newFeed.date) errors.date = "Date is required.";
     if (Number(newFeed.quantity) <= 0) errors.quantity = "Quantity must be greater than 0.";
     if (Number(newFeed.cost) <= 0) errors.cost = "Cost must be greater than 0.";
 
     setValidationErrors(errors);
-
     if (Object.keys(errors).length > 0) return;
 
     if (actionType === "create") await createFeed(newFeed);
@@ -94,45 +90,33 @@ const Feed = () => {
     getFeeds();
   };
 
-  async function handleEdit(id) {
-    if (id) {
-      const feed = await getFeedById(id);
-      setNewFeed({
-        date: feed.date ? new Date(feed.date).toISOString().split("T")[0] : "",
-        feedType: feed.feedType || "",
-        quantity: feed.quantity || "",
-        cost: feed.cost || "",
-        supplier: feed.supplier || "",
-        notes: feed.notes || "",
-      });
-      setUpdateFeedId(feed._id);
-      setActionType("update");
-      setModalOpen(true);
-    }
-  }
-
-  const calculateFeedTotals = (feeds) => {
-    const totals = {};
-    feeds.forEach((f) => {
-      if (totals[f.feedType]) {
-        totals[f.feedType] += f.quantity;
-      } else {
-        totals[f.feedType] = f.quantity;
-      }
+  const handleEdit = async (id) => {
+    const feed = await getFeedById(id);
+    setNewFeed({
+      date: feed.date ? new Date(feed.date).toISOString().split("T")[0] : "",
+      feedType: feed.feedType || "",
+      quantity: feed.quantity || "",
+      cost: feed.cost || "",
+      supplier: feed.supplier || "",
+      notes: feed.notes || "",
     });
-    setFeedTotals(totals);
+    setUpdateFeedId(feed._id);
+    setActionType("update");
+    setModalOpen(true);
   };
 
   useEffect(() => {
-    async function fetchData() {
-      await getFeeds();
-    }
-    fetchData();
+    getFeeds();
   }, []);
 
-  useEffect(() => {
-    calculateFeedTotals(feed);
-  }, [feed]);
+  const feedColors = {
+    Starter: "bg-blue-100 text-blue-800 border-blue-400",
+    Grower: "bg-green-100 text-green-800 border-green-400",
+    Finisher: "bg-yellow-100 text-yellow-800 border-yellow-400",
+    Layer: "bg-purple-100 text-purple-800 border-purple-400",
+    Broiler: "bg-pink-100 text-pink-800 border-pink-400",
+    Medicated: "bg-red-100 text-red-800 border-red-400",
+  };
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -141,12 +125,13 @@ const Feed = () => {
   };
 
   return (
-    <div className="p-6 text-[0.828rem]">
+    <div className="p-6 text-sm">
       {loading && <Loader />}
-      <div className="flex justify-between items-center mb-4">
+
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Feed Management</h2>
         <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
+          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
           onClick={() => {
             setActionType("create");
             setNewFeed({
@@ -165,6 +150,25 @@ const Feed = () => {
         </button>
       </div>
 
+      {/* 🔵 Feed Summary Cards - ONE LINE */}
+      <div className="flex gap-4 overflow-x-auto mb-6 pb-2">
+        {Object.keys(feedColors).map((type) => {
+          const total = feed
+            .filter((f) => f.feedType === type)
+            .reduce((sum, f) => sum + Number(f.quantity), 0);
+          return (
+            <div
+              key={type}
+              className={`min-w-[200px] p-4 rounded-lg shadow-md border-t-4 ${feedColors[type]}`}
+            >
+              <h4 className="text-sm font-semibold">{type} Feed</h4>
+              <p className="text-lg font-bold">{total} Kg</p>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* 🔶 Table of Feed Records */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
@@ -179,16 +183,16 @@ const Feed = () => {
             </tr>
           </thead>
           <tbody>
-            {feed.length > 0 &&
+            {feed.length > 0 ? (
               feed.map((f) => (
                 <tr key={f._id} className="border-b hover:bg-gray-100">
                   <td className="px-4 py-3 text-center">{formatDate(f.date)}</td>
                   <td className="px-4 py-3 text-center">{f.feedType}</td>
-                  <td className="pl-9 py-3 text-center">{f.quantity}</td>
-                  <td className="px-4 py-3 text-center">RS - {f.cost}</td>
+                  <td className="px-4 py-3 text-center">{f.quantity}</td>
+                  <td className="px-4 py-3 text-center">Rs - {f.cost}</td>
                   <td className="px-4 py-3 text-center">{f.supplier}</td>
                   <td className="px-4 py-3 text-center">{f.notes}</td>
-                  <td className="pl-12 py-3 flex space-x-2">
+                  <td className="px-4 py-3 text-center space-x-2">
                     <button
                       onClick={() => handleEdit(f._id)}
                       className="text-blue-500 hover:text-blue-700"
@@ -208,30 +212,19 @@ const Feed = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan="7" className="text-center py-6">
+                  No feed data found.
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-
-        <div className="bg-gray-50 p-4 rounded-lg mb-4 shadow-inner text-sm text-gray-800 space-y-1">
-          <h3 className="font-semibold mb-1">Feed Type Totals:</h3>
-          {Object.keys(feedTotals).length > 0 ? (
-            Object.entries(feedTotals).map(([type, total]) => (
-              <div key={type}>
-                {type} Feed: <strong>{total} Kg</strong>
-              </div>
-            ))
-          ) : (
-            <div>No data available</div>
-          )}
-        </div>
-
-        {feed.length === 0 && (
-          <div className="w-full h-[50vh] flex justify-center items-center text-sm font-medium">
-            No feed found
-          </div>
-        )}
       </div>
 
+      {/* 🔘 Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -246,37 +239,32 @@ const Feed = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.3 }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
                 {actionType === "create" ? "Add New Feed" : "Update Feed"}
               </h3>
               <div className="flex flex-col gap-4">
-
-                <div className="flex flex-col">
-                  <input
-                    type="date"
-                    name="date"
-                    value={newFeed.date}
-                    onChange={handleInputChange}
-                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
-                      validationErrors.date
-                        ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
-                    }`}
-                    required
-                  />
-                  {validationErrors.date && (
-                    <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
-                  )}
-                </div>
+                <input
+                  type="date"
+                  name="date"
+                  value={newFeed.date}
+                  onChange={handleInputChange}
+                  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                    validationErrors.date
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
+                />
+                {validationErrors.date && (
+                  <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
+                )}
 
                 <select
                   name="feedType"
                   value={newFeed.feedType}
                   onChange={handleInputChange}
-                  className="border border-gray-300 text-center bg-white p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  className="border border-gray-300 bg-white p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="">__Select Feed Type</option>
                   <option value="Starter">Starter Feed</option>
@@ -287,43 +275,37 @@ const Feed = () => {
                   <option value="Medicated">Medicated Feed</option>
                 </select>
 
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    name="quantity"
-                    placeholder="Quantity in Kgs"
-                    value={newFeed.quantity}
-                    onChange={handleInputChange}
-                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
-                      validationErrors.quantity
-                        ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
-                    }`}
-                    required
-                  />
-                  {validationErrors.quantity && (
-                    <p className="text-red-600 text-xs mt-1">{validationErrors.quantity}</p>
-                  )}
-                </div>
+                <input
+                  type="number"
+                  name="quantity"
+                  placeholder="Quantity in Kgs"
+                  value={newFeed.quantity}
+                  onChange={handleInputChange}
+                  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                    validationErrors.quantity
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
+                />
+                {validationErrors.quantity && (
+                  <p className="text-red-600 text-xs mt-1">{validationErrors.quantity}</p>
+                )}
 
-                <div className="flex flex-col">
-                  <input
-                    type="number"
-                    name="cost"
-                    placeholder="Cost"
-                    value={newFeed.cost}
-                    onChange={handleInputChange}
-                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
-                      validationErrors.cost
-                        ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
-                    }`}
-                    required
-                  />
-                  {validationErrors.cost && (
-                    <p className="text-red-600 text-xs mt-1">{validationErrors.cost}</p>
-                  )}
-                </div>
+                <input
+                  type="number"
+                  name="cost"
+                  placeholder="Cost"
+                  value={newFeed.cost}
+                  onChange={handleInputChange}
+                  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+                    validationErrors.cost
+                      ? "border-red-500 focus:ring-red-500"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
+                />
+                {validationErrors.cost && (
+                  <p className="text-red-600 text-xs mt-1">{validationErrors.cost}</p>
+                )}
 
                 <input
                   type="text"
@@ -331,8 +313,7 @@ const Feed = () => {
                   placeholder="Supplier"
                   value={newFeed.supplier}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
+                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <input
                   type="text"
@@ -340,18 +321,18 @@ const Feed = () => {
                   placeholder="Notes"
                   value={newFeed.notes}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
 
                 <div className="flex justify-end gap-3 mt-6">
                   <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all"
                     onClick={handleFeed}
                   >
                     {actionType === "create" ? "Add" : "Update"}
                   </button>
                   <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
+                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all"
                     onClick={() => setModalOpen(false)}
                   >
                     Cancel
