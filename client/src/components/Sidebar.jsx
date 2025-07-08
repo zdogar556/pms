@@ -47,6 +47,11 @@ const menuItems = [
     path: "/pms/settings",
     icon: "fas fa-gear",
   },
+  {
+  label: "Reports",
+  path: "/pms/reports",
+  icon: "fas fa-chart-line",
+},
   { label: "Logout", action: "logout", icon: "fa fa-sign-out" },
 ];
 
