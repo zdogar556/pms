@@ -24,7 +24,7 @@ const FeedConsume = () => {
     date: "",
     feedType: "",
     quantityUsed: "",
-    ConsumedBy: "",
+    consumedBy: "",
     notes: "",
   });
 
@@ -67,8 +67,16 @@ const FeedConsume = () => {
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    if (actionType === "create") await createFeedConsumption(newConsumption);
-    else await updateFeedConsumption(updateId, newConsumption);
+    const payload = {
+      date: newConsumption.date,
+      feedType: newConsumption.feedType,
+      quantityUsed: Number(newConsumption.quantityUsed),
+      consumedBy: newConsumption.consumedBy,
+      notes: newConsumption.notes,
+    };
+
+    if (actionType === "create") await createFeedConsumption(payload);
+    else await updateFeedConsumption(updateId, payload);
 
     setActionType("create");
     setModalOpen(false);
@@ -76,28 +84,30 @@ const FeedConsume = () => {
       date: "",
       feedType: "",
       quantityUsed: "",
-      ConsumedBy: "",
+      consumedBy: "",
       notes: "",
     });
     setValidationErrors({});
     getFeedConsumptions();
   };
 
-  const handleEdit = async (id) => {
-    const consumption = await getFeedConsumptionById(id);
-    setNewConsumption({
-      date: consumption.date
-        ? new Date(consumption.date).toISOString().split("T")[0]
-        : "",
-      feedType: consumption.feedType || "",
-      quantityUsed: consumption.quantityUsed || "",
-      ConsumedBy: consumption.consumedBy || "",
-      notes: consumption.notes || "",
-    });
-    setUpdateId(consumption._id);
-    setActionType("update");
-    setModalOpen(true);
-  };
+  const handleEdit = (id) => {
+  const consumption = feedConsumptions.find((item) => item._id === id);
+  if (!consumption) return;
+
+  setNewConsumption({
+    date: consumption.date?.split("T")[0] || "",
+    feedType: consumption.feedType || "", // ✅ This now exists
+    quantityUsed: consumption.quantityUsed,
+    consumedBy: consumption.consumedBy,
+    notes: consumption.notes,
+  });
+
+  setUpdateId(id);
+  setActionType("update");
+  setModalOpen(true);
+};
+
 
   useEffect(() => {
     getFeedConsumptions();
@@ -123,7 +133,7 @@ const FeedConsume = () => {
               date: "",
               feedType: "",
               quantityUsed: "",
-              ConsumedBy: "",
+              consumedBy: "",
               notes: "",
             });
             setValidationErrors({});
@@ -254,9 +264,9 @@ const FeedConsume = () => {
 
                 <input
                   type="text"
-                  name="ConsumedBy"
+                  name="consumedBy"
                   placeholder="Consumed By"
-                  value={newConsumption.ConsumedBy}
+                  value={newConsumption.consumedBy}
                   onChange={handleInputChange}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
@@ -269,7 +279,6 @@ const FeedConsume = () => {
                   value={newConsumption.notes}
                   onChange={handleInputChange}
                   className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
                 />
 
                 <div className="flex justify-end gap-3 mt-6">
