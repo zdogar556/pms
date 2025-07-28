@@ -125,11 +125,11 @@ const Worker = () => {
             {workers.length > 0 ? (
               workers.map((worker) => (
                 <tr key={worker._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3">{worker.name}</td>
-                  <td className="px-4 py-3">{worker.role}</td>
-                  <td className="px-4 py-3">Rs - {worker.salary}</td>
-                  <td className="px-4 py-3">{worker.contact}</td>
-                  <td className="px-4 py-3">{worker.shift}</td>
+                  <td className="px-4 py-3 text-center">{worker.name}</td>
+                  <td className="px-4 py-3 text-center">{worker.role}</td>
+                  <td className="px-4 py-3 text-center">Rs - {worker.salary}</td>
+                  <td className="px-4 py-3 text-center">{worker.contact}</td>
+                  <td className="px-4 py-3 text-center">{worker.shift}</td>
                   <td className="pl-12 py-3 flex space-x-2">
                     <button
                       onClick={() => handleEdit(worker._id)}
