@@ -92,22 +92,36 @@ const FeedConsume = () => {
   };
 
   const handleEdit = (id) => {
-  const consumption = feedConsumptions.find((item) => item._id === id);
-  if (!consumption) return;
+    const consumption = feedConsumptions.find((item) => item._id === id);
+    if (!consumption) return;
 
-  setNewConsumption({
-    date: consumption.date?.split("T")[0] || "",
-    feedType: consumption.feedType || "", // ✅ This now exists
-    quantityUsed: consumption.quantityUsed,
-    consumedBy: consumption.consumedBy,
-    notes: consumption.notes,
-  });
+    setNewConsumption({
+      date: consumption.date?.split("T")[0] || "",
+      feedType: consumption.feedType || "",
+      quantityUsed: consumption.quantityUsed,
+      consumedBy: consumption.consumedBy,
+      notes: consumption.notes,
+    });
 
-  setUpdateId(id);
-  setActionType("update");
-  setModalOpen(true);
-};
+    setUpdateId(id);
+    setActionType("update");
+    setModalOpen(true);
+  };
 
+  const calculateFeedTotals = () => {
+    const totals = {};
+
+    feedConsumptions.forEach((item) => {
+      if (!totals[item.feedType]) {
+        totals[item.feedType] = 0;
+      }
+      totals[item.feedType] += item.quantityUsed;
+    });
+
+    return totals;
+  };
+
+  const feedTypeTotals = calculateFeedTotals();
 
   useEffect(() => {
     getFeedConsumptions();
@@ -122,7 +136,9 @@ const FeedConsume = () => {
   return (
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
-      <div className="flex justify-between items-center mb-4">
+
+      {/* 📋 Header + Add Button */}
+      <div className="flex justify-between items-center mb-6">
         <h2 className="text-xl font-semibold">Feed Consumption</h2>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
@@ -144,6 +160,20 @@ const FeedConsume = () => {
         </button>
       </div>
 
+      {/* 🟦 Feed Totals Summary Boxes */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+        {Object.entries(feedTypeTotals).map(([type, total]) => (
+          <div
+            key={type}
+            className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600"
+          >
+            <h4 className="text-sm font-semibold text-gray-700">{type} Feed</h4>
+            <p className="text-lg font-bold text-blue-700">{total} kg</p>
+          </div>
+        ))}
+      </div>
+
+      {/* 📊 Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
@@ -197,6 +227,7 @@ const FeedConsume = () => {
         </table>
       </div>
 
+      {/* 🪟 Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
