@@ -14,12 +14,12 @@ const menuItems = [
    {
     label: "Poultry Overview",
     path: "/pms/batch",
-    icon: "fa-regular fa-chart-bar",
+    icon: "fas fa-dove",
   },
   {
     label: "Worker Management",
     path: "/pms/workers",
-    icon: "far fa-building",
+    icon: "fas fa-users",
   },
   {
     label: "Production Management",
@@ -34,7 +34,7 @@ const menuItems = [
   {
     label: "Feed Consumption",
     path: "/pms/feedconsume",
-    icon: "far fa-comments",
+    icon: "fas fa-seedling",
   },
   {
     label: "Payroll Management",
