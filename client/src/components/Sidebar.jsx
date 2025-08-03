@@ -42,16 +42,16 @@ const menuItems = [
     icon: "far fa-chart-bar",
   },
   { section: "Analytics" },
+   {
+  label: "Reports",
+  path: "/pms/reports",
+  icon: "fas fa-chart-line",
+},
   {
     label: "Settings",
     path: "/pms/settings",
     icon: "fas fa-gear",
   },
-  {
-  label: "Reports",
-  path: "/pms/reports",
-  icon: "fas fa-chart-line",
-},
   { label: "Logout", action: "logout", icon: "fa fa-sign-out" },
 ];
 
@@ -108,7 +108,7 @@ const Sidebar = () => {
           <div className="flex items-center justify-center mb-9 mr-5">
             <GiFeather className="text-blue-600 text-2xl" />
             <h2 className="ml-2  font-semibold text-gray-200">
-              Polutary Management
+              Poultry Management
             </h2>
           </div>
         </div>
