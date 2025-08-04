@@ -14,11 +14,10 @@ const Attendance = () => {
   const [selectedShift, setSelectedShift] = useState("Morning");
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substr(0, 10));
   const [attendanceData, setAttendanceData] = useState({});
+  const [validationErrors, setValidationErrors] = useState({});
 
   const [viewMode, setViewMode] = useState(false);
   const [viewResults, setViewResults] = useState([]);
-
-  
 
   useEffect(() => {
     getWorkers();
@@ -32,6 +31,11 @@ const Attendance = () => {
   };
 
   const handleSubmit = async () => {
+    if (validationErrors.date) {
+      alert("Please fix validation errors before submitting.");
+      return;
+    }
+
     const attendanceArray = Object.entries(attendanceData).map(([workerId, status]) => ({
       date: selectedDate,
       shift: selectedShift,
@@ -47,12 +51,29 @@ const Attendance = () => {
     alert("Attendance submitted successfully!");
   };
 
- const handleViewAttendance = async () => {
-  const data = await getAttendanceByDateAndShift(selectedDate, selectedShift);
-  console.log("Attendance fetched:", data); // <-- Add this
-  setViewResults(Array.isArray(data) ? data : []);
-  setViewMode(true);
-};
+  const handleViewAttendance = async () => {
+    const data = await getAttendanceByDateAndShift(selectedDate, selectedShift);
+    setViewResults(Array.isArray(data) ? data : []);
+    setViewMode(true);
+  };
+
+  const handleDateChange = (value) => {
+    setSelectedDate(value);
+
+    const errors = { ...validationErrors };
+    const selected = new Date(value);
+    const today = new Date();
+    selected.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0);
+
+    if (selected > today) {
+      errors.date = "Future date is not allowed.";
+    } else {
+      delete errors.date;
+    }
+
+    setValidationErrors(errors);
+  };
 
   const filteredWorkers = workers.filter((worker) => worker.shift === selectedShift);
 
@@ -60,17 +81,24 @@ const Attendance = () => {
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Attendance</h2>
 
-      <div className="flex items-center gap-4 mb-4">
-        <label>
-          Date:
-          <input
-            type="date"
-            className="ml-2 border px-2 py-1"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-          />
-        </label>
-        <label>
+      {/* Controls in single row */}
+      <div className="flex flex-wrap items-start gap-4 mb-4">
+        <div className="flex flex-col">
+          <label>
+            Date:
+            <input
+              type="date"
+              className="ml-2 border px-2 py-1"
+              value={selectedDate}
+              onChange={(e) => handleDateChange(e.target.value)}
+            />
+          </label>
+          {validationErrors.date && (
+            <span className="text-red-500 text-sm mt-1">{validationErrors.date}</span>
+          )}
+        </div>
+
+        <label className="flex items-center">
           Shift:
           <select
             className="ml-2 border px-2 py-1"
@@ -82,6 +110,7 @@ const Attendance = () => {
             <option value="Night">Night</option>
           </select>
         </label>
+
         {!viewMode ? (
           <>
             <button
@@ -150,7 +179,7 @@ const Attendance = () => {
             </thead>
             <tbody>
               {filteredWorkers.map((worker, index) => {
-                const currentStatus = attendanceData[worker._id] || "A"; // Default to A
+                const currentStatus = attendanceData[worker._id] || "A";
 
                 return (
                   <tr key={worker._id} className="hover:bg-gray-50">
