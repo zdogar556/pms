@@ -104,7 +104,7 @@ const Worker = () => {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Worker Management</h2>
         <button
-          className="bg-[#2A2A40] text-white px-4 py-2 rounded-lg hover:bg-blue-800 transition-all"
+          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
             onClick={() => navigate("/pms/attendance")}
             >
               Attendance
