@@ -27,6 +27,7 @@ const ServiceProvider = ({ children }) => {
   const [insights, setInsights] = useState([]);
   const [loading, setLoading] = useState(false);
   const [workers, setWorkers] = useState([]);
+  const [attendance, setAttendance] = useState([]);
   const [feed, setFeed] = useState([]);
   const [feedConsumption, setFeedConsumption] = useState([]);
   const [feedConsumptions, setFeedConsumptions] = useState([]);
@@ -200,6 +201,90 @@ const ServiceProvider = ({ children }) => {
       setLoading(false);
     }
   };
+// ATTENDANCE SERVICES
+
+const getAttendance = async () => {
+  try {
+    setLoading(true);
+    const { data } = await axios.get(`${URL}/attendance`, resolver);
+    setAttendance(data.attendance);
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const getAttendanceById = async (id) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.get(`${URL}/attendance/${id}`, resolver);
+    return data.attendance;
+  } catch (error) {
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const createAttendance = async (newAttendance) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.post(`${URL}/attendance`, newAttendance, mutation);
+    setAttendance([...attendance, data.attendance]);
+    toast.success(data.message);
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Failed to create attendance");
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const updateAttendance = async (id, updatedAttendance) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.patch(`${URL}/attendance/${id}`, updatedAttendance, mutation);
+    const updatedList = [...attendance];
+    const index = updatedList.findIndex(item => item._id === data.updatedAttendance._id);
+    updatedList[index] = data.updatedAttendance;
+    setAttendance(updatedList);
+    toast.success(data.message);
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Failed to update attendance");
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const deleteAttendance = async (id) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.delete(`${URL}/attendance/${id}`, mutation);
+    setAttendance(attendance.filter(item => item._id !== data.deletedAttendance._id));
+    toast.success(data.message);
+  } catch (error) {
+    toast.error(error?.response?.data?.message || "Failed to delete attendance");
+    console.log(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+const getAttendanceByDateAndShift = async (date, shift) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.get(`${URL}/attendance/search?date=${date}&shift=${shift}`, resolver);
+    return data; // ✅ FIXED: backend returns records array directly
+  } catch (error) {
+    console.error("Fetch error:", error.message);
+    return [];
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   // Feed Management
   const getFeeds = async () => {
@@ -656,6 +741,7 @@ const deleteBatch = async (id) => {
     getInsights();
     getProductions();
     getBatches();
+    getAttendance();
   }, []);
 
   return (
@@ -685,6 +771,13 @@ const deleteBatch = async (id) => {
         createWorker,
         updateWorker,
         deleteWorker,
+        attendance,
+        getAttendance,
+        getAttendanceById,
+        createAttendance,
+        updateAttendance,
+        deleteAttendance,
+        getAttendanceByDateAndShift,   
         getFeeds,
         getFeedById,
         createFeed,

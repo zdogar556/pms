@@ -54,6 +54,11 @@ import {
   updatePoultryRecord,
   deletePoultryRecord,
 } from "../controllers/poultryRecord.controller.js";
+import {
+  createAttendance,
+  getAttendances,
+  getAttendanceByDateAndShift,
+} from "../controllers/attendance.controller.js";
 
 import verifyToken from "../middlewares/auth.middleware.js"
 import { getInsights } from "../controllers/insight.controller.js";
@@ -117,5 +122,10 @@ router.get("/poultryrecord", verifyToken, getPoultryRecords);
 router.get("/poultryrecord/:id", verifyToken, getPoultryRecordById);
 router.patch("/poultryrecord/:id", verifyToken, updatePoultryRecord);
 router.delete("/poultryrecord/:id", verifyToken, deletePoultryRecord);
+// ✅ Attendance Routes (define directly here)
+router.post("/attendance", verifyToken, createAttendance);
+router.get("/attendance", verifyToken, getAttendances);
+router.get("/attendance/search", verifyToken, getAttendanceByDateAndShift);
+
 
 export default router;
