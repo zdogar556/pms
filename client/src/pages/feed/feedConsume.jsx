@@ -178,7 +178,7 @@ const FeedConsume = () => {
         <h2 className="text-xl font-semibold">Feed Consumption</h2>
         <div className="flex gap-4">
           <button
-            className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
+            className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
             onClick={() => navigate("/pms/feed-stock")}
           >
             View Feed Stock
