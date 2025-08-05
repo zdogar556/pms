@@ -21,25 +21,38 @@ const FeedStock = () => {
     Grower: "border-green-500",
     Finisher: "border-yellow-500",
     Layer: "border-purple-500",
+    Broiler: "border-pink-500",
+    Medicated: "border-red-500",
   };
 
-  const calculateFeedInStock = () => {
+  // Calculate net stock = total feed added - total feed consumed
+  const calculateNetStock = () => {
     const stock = {};
 
+    // Step 1: Add feed quantities
     feed.forEach((item) => {
-      if (!stock[item.feedType]) stock[item.feedType] = 0;
-      stock[item.feedType] += Number(item.quantity);
+      const type = item.feedType;
+      const quantity = Number(item.quantity);
+      if (!stock[type]) {
+        stock[type] = 0;
+      }
+      stock[type] += quantity;
     });
 
+    // Step 2: Subtract consumed feed quantities
     feedConsumptions.forEach((item) => {
-      if (!stock[item.feedType]) stock[item.feedType] = 0;
-      stock[item.feedType] -= Number(item.quantityUsed);
+      const type = item.feedType; // assumes feedType is directly stored in feedConsumptions
+      const quantityUsed = Number(item.quantityUsed || item.quantity);
+      if (!stock[type]) {
+        stock[type] = 0;
+      }
+      stock[type] -= quantityUsed;
     });
 
     return stock;
   };
 
-  const feedStock = calculateFeedInStock();
+  const netStock = calculateNetStock();
 
   return (
     <div className="p-4">
@@ -55,7 +68,9 @@ const FeedStock = () => {
             >
               <h4 className="text-sm font-semibold">{type} Feed</h4>
               <p className="text-lg font-bold">
-                {feedStock[type] ? `${feedStock[type]} Kg` : "0 Kg"}
+                {netStock[type] && netStock[type] > 0
+                  ? `${netStock[type]} Kg`
+                  : "0 Kg"}
               </p>
             </div>
           ))}

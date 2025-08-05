@@ -8,14 +8,16 @@ import Loader from "../../components/Loader";
 const FeedConsume = () => {
   const {
     loading,
+    feed = [],
     feedConsumptions = [],
+    getFeeds,
     getFeedConsumptions,
     createFeedConsumption,
-    getFeedConsumptionById,
     deleteFeedConsumption,
     updateFeedConsumption,
     formatDate,
   } = useService();
+
   const navigate = useNavigate();
 
   const [isModalOpen, setModalOpen] = useState(false);
@@ -29,7 +31,6 @@ const FeedConsume = () => {
     consumedBy: "",
     notes: "",
   });
-  
 
   const normalizeDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -43,7 +44,6 @@ const FeedConsume = () => {
     setNewConsumption(updated);
 
     const errors = { ...validationErrors };
-
     if (name === "date") {
       const selected = normalizeDate(value);
       const today = new Date();
@@ -54,8 +54,29 @@ const FeedConsume = () => {
         delete errors.date;
       }
     }
+    if (name === "quantityUsed") {
+      const qty = parseFloat(value);
+      const available = getAvailableStock(newConsumption.feedType);
+      if (qty > available) {
+        errors.quantityUsed = `Only ${available} kg available in stock.`;
+      } else {
+        delete errors.quantityUsed;
+      }
+    }
 
     setValidationErrors(errors);
+  };
+
+  const getAvailableStock = (feedType) => {
+    const purchased = feed
+      .filter((f) => f.feedType === feedType)
+      .reduce((acc, cur) => acc + (cur.quantity || 0), 0);
+
+    const consumed = feedConsumptions
+      .filter((f) => f.feedType === feedType)
+      .reduce((acc, cur) => acc + (cur.quantityUsed || 0), 0);
+
+    return purchased - consumed;
   };
 
   const handleSubmit = async () => {
@@ -66,6 +87,20 @@ const FeedConsume = () => {
 
     if (!newConsumption.date) errors.date = "Date is required.";
     else if (selectedDate > today) errors.date = "Future date is not allowed.";
+
+    if (!newConsumption.feedType) {
+      errors.feedType = "Feed type is required.";
+    }
+
+    if (!newConsumption.quantityUsed) {
+      errors.quantityUsed = "Quantity is required.";
+    } else {
+      const quantity = parseFloat(newConsumption.quantityUsed);
+      const available = getAvailableStock(newConsumption.feedType);
+      if (quantity > available) {
+        errors.quantityUsed = `Only ${available} kg available in stock.`;
+      }
+    }
 
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -92,6 +127,7 @@ const FeedConsume = () => {
     });
     setValidationErrors({});
     getFeedConsumptions();
+    getFeeds(); // refresh stock after update
   };
 
   const handleEdit = (id) => {
@@ -113,14 +149,10 @@ const FeedConsume = () => {
 
   const calculateFeedTotals = () => {
     const totals = {};
-
     feedConsumptions.forEach((item) => {
-      if (!totals[item.feedType]) {
-        totals[item.feedType] = 0;
-      }
+      if (!totals[item.feedType]) totals[item.feedType] = 0;
       totals[item.feedType] += item.quantityUsed;
     });
-
     return totals;
   };
 
@@ -128,6 +160,7 @@ const FeedConsume = () => {
 
   useEffect(() => {
     getFeedConsumptions();
+    getFeeds();
   }, []);
 
   const modalVariants = {
@@ -140,39 +173,38 @@ const FeedConsume = () => {
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
 
-      {/* 📋 Header + Add Button */}
+      {/* Header + Buttons */}
       <div className="flex justify-between items-center mb-6">
-  <h2 className="text-xl font-semibold">Feed Consumption</h2>
-  <div className="flex gap-4">
-    <button
-      className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
-      onClick={() => navigate("/pms/feed-stock")}
-    >
-      View Feed Stock
-    </button>
-    <button
-      className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
-      onClick={() => {
-        setModalOpen(true);
-        setActionType("create");
-        setNewConsumption({
-          date: "",
-          feedType: "",
-          quantityUsed: "",
-          consumedBy: "",
-          notes: "",
-        });
-        setValidationErrors({});
-      }}
-    >
-      <FaPlus className="text-sm" />
-      Record Consumption
-    </button>
-  </div>
-</div>
+        <h2 className="text-xl font-semibold">Feed Consumption</h2>
+        <div className="flex gap-4">
+          <button
+            className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
+            onClick={() => navigate("/pms/feed-stock")}
+          >
+            View Feed Stock
+          </button>
+          <button
+            className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
+            onClick={() => {
+              setModalOpen(true);
+              setActionType("create");
+              setNewConsumption({
+                date: "",
+                feedType: "",
+                quantityUsed: "",
+                consumedBy: "",
+                notes: "",
+              });
+              setValidationErrors({});
+            }}
+          >
+            <FaPlus className="text-sm" />
+            Record Consumption
+          </button>
+        </div>
+      </div>
 
-
-      {/* 🟦 Feed Totals Summary Boxes */}
+      {/* Summary Boxes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
         {Object.entries(feedTypeTotals).map(([type, total]) => (
           <div
@@ -185,7 +217,7 @@ const FeedConsume = () => {
         ))}
       </div>
 
-      {/* 📊 Table */}
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
@@ -199,7 +231,7 @@ const FeedConsume = () => {
             </tr>
           </thead>
           <tbody>
-            {Array.isArray(feedConsumptions) && feedConsumptions.length > 0 ? (
+            {feedConsumptions.length > 0 ? (
               feedConsumptions.map((item) => (
                 <tr key={item._id} className="border-b hover:bg-gray-100">
                   <td className="px-4 py-3 text-center">{formatDate(item.date)}</td>
@@ -239,7 +271,7 @@ const FeedConsume = () => {
         </table>
       </div>
 
-      {/* 🪟 Modal */}
+      {/* Modal */}
       <AnimatePresence>
         {isModalOpen && (
           <motion.div
@@ -254,91 +286,110 @@ const FeedConsume = () => {
               initial="hidden"
               animate="visible"
               exit="exit"
-              transition={{ duration: 0.3, ease: "easeInOut" }}
+              transition={{ duration: 0.3 }}
             >
               <h3 className="text-base font-bold mb-6 text-gray-800">
-                {actionType === "create" ? "Record Consumption" : "Update Consumption"}
-              </h3>
+  {actionType === "create" ? "Record Consumption" : "Update Consumption"}
+</h3>
 
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col">
-                  <input
-                    type="date"
-                    name="date"
-                    value={newConsumption.date}
-                    onChange={handleInputChange}
-                    className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
-                      validationErrors.date
-                        ? "border-red-500 focus:ring-red-500"
-                        : "border-gray-300 focus:ring-blue-500 focus:border-transparent"
-                    }`}
-                    required
-                  />
-                  {validationErrors.date && (
-                    <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
-                  )}
-                </div>
+<div className="space-y-4">
+  {/* Date */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Date</label>
+    <input
+      type="date"
+      name="date"
+      value={newConsumption.date}
+      onChange={handleInputChange}
+      className={`w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 ${
+        validationErrors.date
+          ? "border-red-500 focus:ring-red-500"
+          : "border-gray-300 focus:ring-blue-500"
+      }`}
+    />
+    {validationErrors.date && (
+      <p className="text-red-600 text-xs mt-1">{validationErrors.date}</p>
+    )}
+  </div>
 
-                <select
-                  name="feedType"
-                  value={newConsumption.feedType}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 text-center bg-white p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">__Select Feed Type</option>
-                  <option value="Starter">Starter Feed</option>
-                  <option value="Grower">Grower Feed</option>
-                  <option value="Finisher">Finisher Feed</option>
-                  <option value="Layer">Layer Feed</option>
-                  <option value="Broiler">Broiler Feed</option>
-                  <option value="Medicated">Medicated Feed</option>
-                </select>
+  {/* Feed Type */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Feed Type</label>
+    <select
+      name="feedType"
+      value={newConsumption.feedType}
+      onChange={handleInputChange}
+      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    >
+      <option value="">__Select Feed Type</option>
+      <option value="Starter">Starter Feed</option>
+      <option value="Grower">Grower Feed</option>
+      <option value="Finisher">Finisher Feed</option>
+      <option value="Layer">Layer Feed</option>
+      <option value="Broiler">Broiler Feed</option>
+      <option value="Medicated">Medicated Feed</option>
+    </select>
+  </div>
 
-                <input
-                  type="number"
-                  name="quantityUsed"
-                  placeholder="Quantity in Kgs"
-                  value={newConsumption.quantityUsed}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+  {/* Quantity Used */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Quantity Used (kg)</label>
+    <input
+      type="number"
+      name="quantityUsed"
+      placeholder="Enter quantity"
+      value={newConsumption.quantityUsed}
+      onChange={handleInputChange}
+      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+    {validationErrors.quantityUsed && (
+      <p className="text-red-600 text-xs mt-1">{validationErrors.quantityUsed}</p>
+    )}
+  </div>
 
-                <input
-                  type="text"
-                  name="consumedBy"
-                  placeholder="Consumed By"
-                  value={newConsumption.consumedBy}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+  {/* Consumed By */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Consumed By</label>
+    <input
+      type="text"
+      name="consumedBy"
+      placeholder="Enter person or group"
+      value={newConsumption.consumedBy}
+      onChange={handleInputChange}
+      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
 
-                <input
-                  type="text"
-                  name="notes"
-                  placeholder="Notes"
-                  value={newConsumption.notes}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
+  {/* Notes */}
+  <div className="flex flex-col">
+    <label className="text-sm font-medium text-gray-700 mb-1">Notes (Optional)</label>
+    <input
+      type="text"
+      name="notes"
+      placeholder="Additional notes"
+      value={newConsumption.notes}
+      onChange={handleInputChange}
+      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+    />
+  </div>
 
-                <div className="flex justify-end gap-3 mt-6">
-                  <button
-                    className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
-                    onClick={handleSubmit}
-                  >
-                    {actionType === "create" ? "Record" : "Update"}
-                  </button>
-                  <button
-                    className="bg-gray-500 text-white px-6 py-3 rounded-lg hover:bg-gray-600 transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg"
-                    onClick={() => setModalOpen(false)}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
+  {/* Buttons */}
+  <div className="flex justify-end gap-3 pt-4">
+    <button
+      className="bg-blue-600 text-white px-5 py-2.5 rounded-md text-sm hover:bg-blue-700"
+      onClick={handleSubmit}
+    >
+      {actionType === "create" ? "Record" : "Update"}
+    </button>
+    <button
+      className="bg-gray-500 text-white px-5 py-2.5 rounded-md text-sm hover:bg-gray-600"
+      onClick={() => setModalOpen(false)}
+    >
+      Cancel
+    </button>
+  </div>
+</div>
+
             </motion.div>
           </motion.div>
         )}
