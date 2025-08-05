@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { useService } from "../../context";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import Loader from "../../components/Loader";
 
 const FeedConsume = () => {
@@ -15,6 +16,7 @@ const FeedConsume = () => {
     updateFeedConsumption,
     formatDate,
   } = useService();
+  const navigate = useNavigate();
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [actionType, setActionType] = useState("create");
@@ -27,6 +29,7 @@ const FeedConsume = () => {
     consumedBy: "",
     notes: "",
   });
+  
 
   const normalizeDate = (dateStr) => {
     const d = new Date(dateStr);
@@ -139,26 +142,35 @@ const FeedConsume = () => {
 
       {/* 📋 Header + Add Button */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Feed Consumption</h2>
-        <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
-          onClick={() => {
-            setModalOpen(true);
-            setActionType("create");
-            setNewConsumption({
-              date: "",
-              feedType: "",
-              quantityUsed: "",
-              consumedBy: "",
-              notes: "",
-            });
-            setValidationErrors({});
-          }}
-        >
-          <FaPlus className="text-sm" />
-          Record Consumption
-        </button>
-      </div>
+  <h2 className="text-xl font-semibold">Feed Consumption</h2>
+  <div className="flex gap-4">
+    <button
+      className="bg-green-700 text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
+      onClick={() => navigate("/pms/feed-stock")}
+    >
+      View Feed Stock
+    </button>
+    <button
+      className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
+      onClick={() => {
+        setModalOpen(true);
+        setActionType("create");
+        setNewConsumption({
+          date: "",
+          feedType: "",
+          quantityUsed: "",
+          consumedBy: "",
+          notes: "",
+        });
+        setValidationErrors({});
+      }}
+    >
+      <FaPlus className="text-sm" />
+      Record Consumption
+    </button>
+  </div>
+</div>
+
 
       {/* 🟦 Feed Totals Summary Boxes */}
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
