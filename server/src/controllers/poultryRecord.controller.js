@@ -6,6 +6,18 @@ export const createPoultryRecord = async (req, res) => {
   try {
     const batch = await PoultryBatch.findById(req.body.batchId);
     if (!batch) return res.status(404).json({ message: "Batch not found" });
+
+    const totalExpired = await PoultryRecord.aggregate([
+      { $match: { batchId: batch._id } },
+      { $group: { _id: null, totalExpired: { $sum: "$expiredCount" } } }
+    ]);
+    const expiredSoFar = totalExpired[0]?.totalExpired || 0;
+    const currentQuantity = batch.quantity - expiredSoFar;
+
+    if (req.body.expiredCount > currentQuantity) {
+      return res.status(400).json({ message: `Expired count exceeds current quantity (${currentQuantity})` });
+    }
+
     const poultryRecord = await PoultryRecord.create({ ...req.body, batchId: batch._id });
     res.status(201).json(poultryRecord);
   } catch (error) {
@@ -13,6 +25,7 @@ export const createPoultryRecord = async (req, res) => {
     res.status(400).json({ message: error.message });
   }
 };
+
 // Read All
 export const getPoultryRecords = async (req, res) => {
   try {
@@ -46,12 +59,24 @@ export const getPoultryRecordById = async (req, res) => {
 // Update
 export const updatePoultryRecord = async (req, res) => {
   try {
-    const updated = await PoultryRecord.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updated) return res.status(404).json({ message: "Not found" });
+    const existing = await PoultryRecord.findById(req.params.id);
+    if (!existing) return res.status(404).json({ message: "Record not found" });
+
+    const batch = await PoultryBatch.findById(existing.batchId);
+    if (!batch) return res.status(404).json({ message: "Batch not found" });
+
+    const totalExpired = await PoultryRecord.aggregate([
+      { $match: { batchId: batch._id, _id: { $ne: existing._id } } },
+      { $group: { _id: null, totalExpired: { $sum: "$expiredCount" } } }
+    ]);
+    const otherExpired = totalExpired[0]?.totalExpired || 0;
+    const currentQuantity = batch.quantity - otherExpired;
+
+    if (req.body.expiredCount > currentQuantity) {
+      return res.status(400).json({ message: `Expired count exceeds current quantity (${currentQuantity})` });
+    }
+
+    const updated = await PoultryRecord.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.status(200).json(updated);
   } catch (error) {
     res.status(400).json({ message: error.message });

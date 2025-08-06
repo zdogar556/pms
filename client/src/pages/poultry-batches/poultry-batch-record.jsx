@@ -15,7 +15,7 @@ const PoultryBatchRecord = () => {
     formatDate,
     createPoultryRecord,
     updatePoultryRecord,
-    deletePoultryRecord
+    deletePoultryRecord,
   } = useService();
 
   const [batch, setBatch] = useState(null);
@@ -37,11 +37,11 @@ const PoultryBatchRecord = () => {
     fetchData();
   }, [batchId]);
 
-  const validate = (field, value) => {
+  const validate = (field, value, allData = formData) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-
     let error = "";
+
     if (field === "date") {
       const selected = new Date(value);
       selected.setHours(0, 0, 0, 0);
@@ -49,26 +49,37 @@ const PoultryBatchRecord = () => {
         error = "Date cannot be in the future.";
       }
     }
+
     if (field === "expiredCount") {
-      if (parseInt(value) < 0) {
+      const numericValue = parseInt(value);
+      if (numericValue < 0) {
         error = "Expired count cannot be negative.";
+      } else if (batch) {
+        const totalExpired = poultryRecords
+          .filter((r) => r.batchId === batchId && r._id !== editingId)
+          .reduce((sum, r) => sum + r.expiredCount, 0);
+        const currentQuantity = batch.quantity - totalExpired;
+        if (numericValue > currentQuantity) {
+          error = `Expired count exceeds current quantity (${currentQuantity}).`;
+        }
       }
     }
+
     setErrors((prev) => ({ ...prev, [field]: error }));
   };
 
   const handleInput = (e) => {
     const { name, value } = e.target;
-    validate(name, value);
     setFormData({ ...formData, [name]: value });
+    validate(name, value);
   };
 
   const handleSubmit = async () => {
+    const fields = ["date", "expiredCount"];
+    fields.forEach((field) => validate(field, formData[field]));
+
     const hasErrors = Object.values(errors).some((err) => err);
-    if (hasErrors) {
-      alert("Please fix validation errors before submitting.");
-      return;
-    }
+    if (hasErrors) return;
 
     try {
       if (editingId) {
@@ -164,7 +175,9 @@ const PoultryBatchRecord = () => {
                     </button>
                     <button
                       onClick={async () => {
-                        if (window.confirm("Are you sure you want to delete?")) {
+                        if (
+                          window.confirm("Are you sure you want to delete?")
+                        ) {
                           await deletePoultryRecord(record._id);
                           await getPoultryRecords();
                         }
@@ -178,7 +191,10 @@ const PoultryBatchRecord = () => {
               ))
             ) : (
               <tr>
-                <td colSpan="4" className="text-center py-8 text-sm font-medium">
+                <td
+                  colSpan="4"
+                  className="text-center py-8 text-sm font-medium"
+                >
                   No records found for this batch.
                 </td>
               </tr>
@@ -233,12 +249,16 @@ const PoultryBatchRecord = () => {
                     value={formData.expiredCount}
                     onChange={handleInput}
                     className={`border p-2.5 rounded-md w-full ${
-                      errors.expiredCount ? "border-red-500" : "border-gray-300"
+                      errors.expiredCount
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     required
                   />
                   {errors.expiredCount && (
-                    <p className="text-red-500 text-xs mt-1">{errors.expiredCount}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {errors.expiredCount}
+                    </p>
                   )}
                 </div>
 
