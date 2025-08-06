@@ -1,13 +1,39 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useService } from "../../context";
 
 const Reports = () => {
-  const { feed, feedConsumptions, productions, payrolls } = useService();
+  const {
+    feed,
+    feedConsumptions,
+    productions,
+    payrolls,
+    getFeeds,
+    getFeedConsumptions,
+    getProductions,
+    getPayrolls,
+  } = useService();
 
   const [reportType, setReportType] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
+
+  // Lazy load data based on selected report type
+  useEffect(() => {
+    if (!reportType) return;
+
+    const fetchData = async () => {
+      if (reportType === "feed" && feed.length === 0) await getFeeds();
+      if (reportType === "feedconsume" && feedConsumptions.length === 0)
+        await getFeedConsumptions();
+      if (reportType === "production" && productions.length === 0)
+        await getProductions();
+      if (reportType === "payroll" && payrolls.length === 0)
+        await getPayrolls();
+    };
+
+    fetchData();
+  }, [reportType]);
 
   const formatDate = (date) =>
     new Date(date).toLocaleDateString("en-GB", {
@@ -91,7 +117,9 @@ const Reports = () => {
                 <tr key={index}>
                   <td className="border px-4 py-2">{formatDate(item.date)}</td>
                   <td className="border px-4 py-2">{item.feedType}</td>
-                  <td className="border px-4 py-2">{item.quantityUsed ?? item.quantity}</td>
+                  <td className="border px-4 py-2">
+                    {item.quantityUsed ?? item.quantity}
+                  </td>
                   <td className="border px-4 py-2">{item.batch || "-"}</td>
                 </tr>
               ))}

@@ -742,6 +742,7 @@ const deleteBatch = async (id) => {
     getProductions();
     getBatches();
     getAttendance();
+    
   }, []);
 
   return (
