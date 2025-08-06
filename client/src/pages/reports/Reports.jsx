@@ -154,7 +154,7 @@ const Reports = () => {
       case "feed":
         return (
           <table className="table-auto w-full border mt-4">
-            <thead className="bg-gray-200">
+            <thead className="bg-[#2A2A40] text-white">
               <tr>
                 <th className="border px-4 py-2">Date</th>
                 <th className="border px-4 py-2">Feed Type</th>
@@ -178,7 +178,7 @@ const Reports = () => {
       case "feedconsume":
         return (
           <table className="table-auto w-full border mt-4">
-            <thead className="bg-gray-200">
+            <thead className="bg-[#2A2A40] text-white">
               <tr>
                 <th className="border px-4 py-2">Date</th>
                 <th className="border px-4 py-2">Feed Type</th>
@@ -204,7 +204,7 @@ const Reports = () => {
       case "production":
         return (
           <table className="table-auto w-full border mt-4">
-            <thead className="bg-gray-200">
+            <thead className="bg-[#2A2A40] text-white">
               <tr>
                 <th className="border px-4 py-2">Date</th>
                 <th className="border px-4 py-2">Total Eggs</th>
@@ -228,7 +228,7 @@ const Reports = () => {
       case "payroll":
         return (
           <table className="table-auto w-full border mt-4">
-            <thead className="bg-gray-200">
+            <thead className="bg-[#2A2A40] text-white">
               <tr>
                 <th className="border px-4 py-2">Date</th>
                 <th className="border px-4 py-2">Eggs Sold</th>
