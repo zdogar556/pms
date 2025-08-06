@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from "react";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  ResponsiveContainer,
+} from "recharts";
 import { useService } from "../../context";
 
 const Reports = () => {
@@ -18,7 +30,6 @@ const Reports = () => {
   const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
 
-  // Lazy load data based on selected report type
   useEffect(() => {
     if (!reportType) return;
 
@@ -43,13 +54,8 @@ const Reports = () => {
     });
 
   const handleGenerate = () => {
-    if (!reportType) {
-      alert("Please select a report type.");
-      return;
-    }
-
-    if (!startDate || !endDate) {
-      alert("Please select both start and end dates.");
+    if (!reportType || !startDate || !endDate) {
+      alert("Please select report type and date range.");
       return;
     }
 
@@ -70,6 +76,74 @@ const Reports = () => {
       }) || [];
 
     setReportData(data);
+  };
+
+  const renderChart = () => {
+    if (!reportData.length) return null;
+
+    const chartData = reportData.map((item) => {
+      const date = formatDate(item.date);
+      switch (reportType) {
+        case "feed":
+          return { date, quantity: item.quantity };
+        case "feedconsume":
+          return {
+            date,
+            quantityUsed: item.quantityUsed ?? item.quantity,
+          };
+        case "production":
+          return {
+            date,
+            goodEggs: item.goodEggs,
+            damagedEggs: item.damagedEggs,
+          };
+        case "payroll":
+          return {
+            date,
+            revenue: (item.eggsSold || 0) * (item.pricePerEgg || 0),
+          };
+        default:
+          return {};
+      }
+    });
+
+    return (
+      <div className="w-full h-96 mt-6">
+        <ResponsiveContainer width="100%" height="100%">
+          {reportType === "production" ? (
+            <BarChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Bar dataKey="goodEggs" fill="#4CAF50" />
+              <Bar dataKey="damagedEggs" fill="#F44336" />
+            </BarChart>
+          ) : (
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" />
+              <YAxis />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey={
+                  reportType === "feed"
+                    ? "quantity"
+                    : reportType === "feedconsume"
+                    ? "quantityUsed"
+                    : "revenue"
+                }
+                stroke="#8884d8"
+                activeDot={{ r: 8 }}
+              />
+            </LineChart>
+          )}
+        </ResponsiveContainer>
+      </div>
+    );
   };
 
   const renderTable = () => {
@@ -184,7 +258,7 @@ const Reports = () => {
   };
 
   return (
-    <div className="p-4 max-w-4xl mx-auto">
+    <div className="p-4 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Reports</h2>
 
       <div className="flex flex-wrap gap-4 mb-6">
@@ -204,7 +278,7 @@ const Reports = () => {
 
       {reportType && (
         <div className="mb-6">
-          <div className="flex items-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4 flex-wrap">
             <div>
               <label className="block mb-1">Start Date</label>
               <input
@@ -241,6 +315,7 @@ const Reports = () => {
       )}
 
       {renderTable()}
+      {renderChart()}
     </div>
   );
 };
