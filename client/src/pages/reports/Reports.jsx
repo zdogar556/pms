@@ -136,7 +136,7 @@ const Reports = () => {
                     ? "quantityUsed"
                     : "revenue"
                 }
-                stroke="#8884d8"
+                stroke="#FF9800"
                 activeDot={{ r: 8 }}
               />
             </LineChart>
