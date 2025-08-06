@@ -56,7 +56,7 @@ const FeedStock = () => {
 
   return (
     <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">📦 Feed In Stock</h2>
+      <h2 className="text-2xl font-bold mb-4"> Feed In Stock</h2>
       {loading ? (
         <Loader />
       ) : (
