@@ -1,204 +1,217 @@
 import React, { useState } from "react";
 import { useService } from "../../context";
-// import {
-//   LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
-// } from "recharts";
 
 const Reports = () => {
-  const {
-    getEggProductionReport,
-    getFeedReport,
-    getFeedConsumptionReport
-  } = useService();
+  const { feed, feedConsumptions, productions, payrolls } = useService();
 
-  const [selectedReport, setSelectedReport] = useState("");
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [reportType, setReportType] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [reportData, setReportData] = useState([]);
 
-  const handleGenerate = async () => {
-    if (!from || !to) return alert("Select both dates");
+  const formatDate = (date) =>
+    new Date(date).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
 
-    let data = [];
-    if (selectedReport === "egg") {
-      data = await getEggProductionReport(from, to);
-    } else if (selectedReport === "feed") {
-      data = await getFeedReport(from, to);
-    } else if (selectedReport === "feedConsumption") {
-      data = await getFeedConsumptionReport(from, to);
+  const handleGenerate = () => {
+    if (!reportType) {
+      alert("Please select a report type.");
+      return;
     }
+
+    if (!startDate || !endDate) {
+      alert("Please select both start and end dates.");
+      return;
+    }
+
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    const selectedData = {
+      feed,
+      feedconsume: feedConsumptions,
+      production: productions,
+      payroll: payrolls,
+    };
+
+    const data =
+      selectedData[reportType]?.filter((item) => {
+        const d = new Date(item.date);
+        return d >= start && d <= end;
+      }) || [];
 
     setReportData(data);
   };
 
-  const renderChart = () => {
-    if (reportData.length === 0) return null;
-
-    const chartData = reportData.map((r) => ({
-      ...r,
-      date: new Date(r.date).toLocaleDateString()
-    }));
-
-    if (selectedReport === "egg") {
-      return (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="totalEggs" fill="#8884d8" name="Total Eggs" />
-            <Bar dataKey="goodEggs" fill="#82ca9d" name="Good Eggs" />
-            <Bar dataKey="damagedEggs" fill="#ff6961" name="Damaged Eggs" />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-
-    if (selectedReport === "feed") {
-      return (
-        <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Line type="monotone" dataKey="quantity" stroke="#8884d8" name="Quantity" />
-            <Line type="monotone" dataKey="cost" stroke="#82ca9d" name="Cost" />
-          </LineChart>
-        </ResponsiveContainer>
-      );
-    }
-
-    if (selectedReport === "feedConsumption") {
-      return (
-        <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="quantity" fill="#8884d8" name="Quantity Used" />
-          </BarChart>
-        </ResponsiveContainer>
-      );
-    }
-
-    return null;
-  };
-
   const renderTable = () => {
-    if (reportData.length === 0) return null;
+    if (!reportData.length)
+      return <p className="mt-4">No records found for selected range.</p>;
 
-    if (selectedReport === "egg") {
-      return (
-        <table className="w-full border mt-4">
-          <thead>
-            <tr>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Total</th>
-              <th className="border p-2">Good</th>
-              <th className="border p-2">Damaged</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.map((r) => (
-              <tr key={r._id}>
-                <td className="border p-2">{new Date(r.date).toLocaleDateString()}</td>
-                <td className="border p-2">{r.totalEggs}</td>
-                <td className="border p-2">{r.goodEggs}</td>
-                <td className="border p-2">{r.damagedEggs}</td>
+    switch (reportType) {
+      case "feed":
+        return (
+          <table className="table-auto w-full border mt-4">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Feed Type</th>
+                <th className="border px-4 py-2">Quantity</th>
+                <th className="border px-4 py-2">Supplier</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    }
+            </thead>
+            <tbody>
+              {reportData.map((item, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2">{formatDate(item.date)}</td>
+                  <td className="border px-4 py-2">{item.feedType}</td>
+                  <td className="border px-4 py-2">{item.quantity}</td>
+                  <td className="border px-4 py-2">{item.supplier}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
 
-    if (selectedReport === "feed") {
-      return (
-        <table className="w-full border mt-4">
-          <thead>
-            <tr>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Type</th>
-              <th className="border p-2">Quantity</th>
-              <th className="border p-2">Cost</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.map((r) => (
-              <tr key={r._id}>
-                <td className="border p-2">{new Date(r.date).toLocaleDateString()}</td>
-                <td className="border p-2">{r.feedType}</td>
-                <td className="border p-2">{r.quantity}</td>
-                <td className="border p-2">{r.cost}</td>
+      case "feedconsume":
+        return (
+          <table className="table-auto w-full border mt-4">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Feed Type</th>
+                <th className="border px-4 py-2">Quantity Used</th>
+                <th className="border px-4 py-2">Batch</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    }
+            </thead>
+            <tbody>
+              {reportData.map((item, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2">{formatDate(item.date)}</td>
+                  <td className="border px-4 py-2">{item.feedType}</td>
+                  <td className="border px-4 py-2">{item.quantityUsed ?? item.quantity}</td>
+                  <td className="border px-4 py-2">{item.batch || "-"}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
 
-    if (selectedReport === "feedConsumption") {
-      return (
-        <table className="w-full border mt-4">
-          <thead>
-            <tr>
-              <th className="border p-2">Date</th>
-              <th className="border p-2">Type</th>
-              <th className="border p-2">Quantity Used</th>
-            </tr>
-          </thead>
-          <tbody>
-            {reportData.map((r) => (
-              <tr key={r._id}>
-                <td className="border p-2">{new Date(r.date).toLocaleDateString()}</td>
-                <td className="border p-2">{r.feedType}</td>
-                <td className="border p-2">{r.quantity}</td>
+      case "production":
+        return (
+          <table className="table-auto w-full border mt-4">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Total Eggs</th>
+                <th className="border px-4 py-2">Good Eggs</th>
+                <th className="border px-4 py-2">Damaged Eggs</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      );
-    }
+            </thead>
+            <tbody>
+              {reportData.map((item, index) => (
+                <tr key={index}>
+                  <td className="border px-4 py-2">{formatDate(item.date)}</td>
+                  <td className="border px-4 py-2">{item.totalEggs}</td>
+                  <td className="border px-4 py-2">{item.goodEggs}</td>
+                  <td className="border px-4 py-2">{item.damagedEggs}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        );
 
-    return null;
+      case "payroll":
+        return (
+          <table className="table-auto w-full border mt-4">
+            <thead className="bg-gray-200">
+              <tr>
+                <th className="border px-4 py-2">Date</th>
+                <th className="border px-4 py-2">Eggs Sold</th>
+                <th className="border px-4 py-2">Price/Egg</th>
+                <th className="border px-4 py-2">Total Revenue</th>
+              </tr>
+            </thead>
+            <tbody>
+              {reportData.map((item, index) => {
+                const revenue = (item.eggsSold || 0) * (item.pricePerEgg || 0);
+                return (
+                  <tr key={index}>
+                    <td className="border px-4 py-2">{formatDate(item.date)}</td>
+                    <td className="border px-4 py-2">{item.eggsSold}</td>
+                    <td className="border px-4 py-2">{item.pricePerEgg}</td>
+                    <td className="border px-4 py-2">{revenue}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        );
+
+      default:
+        return null;
+    }
   };
 
   return (
-    <div className="p-4">
-      <h2 className="text-2xl font-bold mb-4">📊 Reports</h2>
+    <div className="p-4 max-w-4xl mx-auto">
+      <h2 className="text-2xl font-bold mb-4">Reports</h2>
 
-      <div className="flex flex-wrap gap-4 mb-4">
-        <button className="bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setSelectedReport("egg")}>
-          🥚 Egg Production
+      <div className="flex flex-wrap gap-4 mb-6">
+        <button onClick={() => setReportType("feed")} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
+          Feed Report
         </button>
-        <button className="bg-green-500 text-white px-4 py-2 rounded" onClick={() => setSelectedReport("feed")}>
-          🐔 Feed Purchase
+        <button onClick={() => setReportType("feedconsume")} className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded">
+          Feed Consumption Report
         </button>
-        <button className="bg-orange-500 text-white px-4 py-2 rounded" onClick={() => setSelectedReport("feedConsumption")}>
-          🍽️ Feed Consumption
+        <button onClick={() => setReportType("production")} className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded">
+          Egg Production Report
+        </button>
+        <button onClick={() => setReportType("payroll")} className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+          Payroll Report
         </button>
       </div>
 
-      {selectedReport && (
-        <div className="flex items-center gap-2 mb-4">
-          <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="border px-2 py-1" />
-          <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="border px-2 py-1" />
-          <button onClick={handleGenerate} className="bg-black text-white px-4 py-1 rounded">
-            Generate Report
-          </button>
+      {reportType && (
+        <div className="mb-6">
+          <div className="flex items-center gap-4 mb-4">
+            <div>
+              <label className="block mb-1">Start Date</label>
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="border px-3 py-2 rounded"
+              />
+            </div>
+            <div>
+              <label className="block mb-1">End Date</label>
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="border px-3 py-2 rounded"
+              />
+            </div>
+            <div className="mt-6">
+              <button
+                disabled={!startDate || !endDate}
+                onClick={handleGenerate}
+                className={`px-6 py-2 rounded font-medium transition ${
+                  !startDate || !endDate
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
+              >
+                Generate Report
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* Chart */}
-      {renderChart()}
-
-      {/* Table */}
       {renderTable()}
     </div>
   );
