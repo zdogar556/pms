@@ -257,6 +257,13 @@ const Reports = () => {
     }
   };
 
+  const reportTitles = {
+    feed: "Feed Report",
+    feedconsume: "Feed Consumption Report",
+    production: "Egg Production Report",
+    payroll: "Payroll Report",
+  };
+
   return (
     <div className="p-4 max-w-6xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">Reports</h2>
@@ -312,6 +319,12 @@ const Reports = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {reportData.length > 0 && (
+        <h3 className="text-xl font-semibold mt-6 mb-2">
+          {reportTitles[reportType]}
+        </h3>
       )}
 
       {renderTable()}
