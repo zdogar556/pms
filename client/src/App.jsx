@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast";
 
 const Login = lazy(() => import("./pages/auth/Login"));
 const Register = lazy(() => import("./pages/auth/Register"));
+const ForgotPassword = lazy(() => import("./pages/auth/Forgotpassword"));
 const Layout = lazy(() => import("./layouts/Index"));
 const Home = lazy(() => import("./pages/home/Home"));
 const Worker = lazy(() => import("./pages/worker/Worker"));
@@ -30,6 +31,7 @@ const App = () => {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           {token ? (
             <Route path="/pms/*" element={<Layout />}>
               <Route index element={<Home />} />

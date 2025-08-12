@@ -25,6 +25,7 @@ import {
   logoutAdmin,
   registerAdmin,
   updatePassword,
+    forgotPassword,
 } from "../controllers/authentication.controller.js";
 import {
   addFeed,
@@ -70,6 +71,7 @@ router.post("/auth/register", registerAdmin);
 router.post("/auth/login", loginAdmin);
 router.get("/auth/logout", verifyToken, logoutAdmin);
 router.patch("/auth/update/password", verifyToken, updatePassword);
+router.post("/auth/forgot-password", forgotPassword);
 
 // Insights
 router.get("/insights", verifyToken, getInsights);
