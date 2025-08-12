@@ -26,7 +26,7 @@ const Login = () => {
         <div className="flex items-center justify-center">
           <img src="/pms.png" className="w-16" alt="pms_logo" />
           <h2 className="text-xl font-semibold text-gray-700">
-            Polutary Management
+            Poultry Management
           </h2>
         </div>
         <form className="text-sm" onSubmit={handleSubmit}>

@@ -23,7 +23,7 @@ const Register = () => {
         <div className="flex items-center justify-center mb-9">
           <GiFeather className="text-blue-600 text-4xl" />
           <h2 className="ml-2 text-xl font-semibold text-gray-700">
-            Polutary Management
+            Poultry Management
           </h2>
         </div>
         <form className="text-sm" onSubmit={handleSubmit}>
