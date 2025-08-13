@@ -150,23 +150,24 @@ const Feed = () => {
         </button>
       </div>
 
-      {/* 🔵 Feed Summary Cards - ONE LINE */}
-      <div className="flex gap-4 overflow-x-auto mb-6 pb-2">
-        {Object.keys(feedColors).map((type) => {
-          const total = feed
-            .filter((f) => f.feedType === type)
-            .reduce((sum, f) => sum + Number(f.quantity), 0);
-          return (
-            <div
-              key={type}
-              className={`min-w-[200px] p-4 rounded-lg shadow-md border-t-4 ${feedColors[type]}`}
-            >
-              <h4 className="text-sm font-semibold">{type} Feed</h4>
-              <p className="text-lg font-bold">{total} Kg</p>
-            </div>
-          );
-        })}
+      {/* 🔵 Feed Summary Cards - Responsive Layout */}
+      <div className="grid gap-4 mb-6 pb-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-[repeat(auto-fit,minmax(0,1fr))]">
+      {Object.keys(feedColors).map((type) => {
+        const total = feed
+      .filter((f) => f.feedType === type)
+      .reduce((sum, f) => sum + Number(f.quantity), 0);
+    return (
+      <div
+        key={type}
+        className={`p-4 rounded-lg shadow-md border-t-4 ${feedColors[type]}`}
+      >
+        <h4 className="text-sm font-semibold">{type} Feed</h4>
+        <p className="text-lg font-bold">{total} Kg</p>
       </div>
+        );
+      })}
+      </div>
+
 
       {/* 🔶 Table of Feed Records */}
       <div className="overflow-x-auto">
