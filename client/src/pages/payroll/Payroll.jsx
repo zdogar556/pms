@@ -137,45 +137,48 @@ const Payroll = () => {
             </tr>
           </thead>
           <tbody>
-            {payrolls.length > 0 ? (
-              payrolls.map((payroll) => (
-                <tr key={payroll._id} className="border-b hover:bg-gray-100">
-                  <td className="px-4 py-3 text-center">{formatDate(payroll.date)}</td>
-                  <td className="px-4 py-3 text-center">{payroll.eggsSold}</td>
-                  <td className="px-4 py-3 text-center">RS - {payroll.pricePerEgg}</td>
-                  <td className="px-4 py-3 text-center">RS - {payroll.totalExpense}</td>
-                  <td className="px-4 py-3 text-center">RS - {payroll.totalRevenue}</td>
-                  <td className="px-4 py-3 text-center">RS - {payroll.totalSalaries}</td>
-                  <td className="px-4 py-3 text-center">RS - {payroll.netProfit}</td>
-                  <td className="pl-12 py-3 flex space-x-2">
-                    <button
-                      onClick={() => handleEdit(payroll._id)}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (window.confirm("Are you sure you want to delete?")) {
-                          await deletePayroll(payroll._id);
-                          getPayrolls();
-                        }
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="8" className="text-center py-8 text-sm font-medium">
-                  No payrolls found
-                </td>
-              </tr>
-            )}
-          </tbody>
+  {payrolls.length > 0 ? (
+    [...payrolls] // create a copy so original state isn't mutated
+      .sort((a, b) => new Date(b.date) - new Date(a.date)) // latest date first
+      .map((payroll) => (
+        <tr key={payroll._id} className="border-b hover:bg-gray-100">
+          <td className="px-4 py-3 text-center">{formatDate(payroll.date)}</td>
+          <td className="px-4 py-3 text-center">{payroll.eggsSold}</td>
+          <td className="px-4 py-3 text-center">RS - {payroll.pricePerEgg}</td>
+          <td className="px-4 py-3 text-center">RS - {payroll.totalExpense}</td>
+          <td className="px-4 py-3 text-center">RS - {payroll.totalRevenue}</td>
+          <td className="px-4 py-3 text-center">RS - {payroll.totalSalaries}</td>
+          <td className="px-4 py-3 text-center">RS - {payroll.netProfit}</td>
+          <td className="pl-12 py-3 flex space-x-2">
+            <button
+              onClick={() => handleEdit(payroll._id)}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <FaEdit />
+            </button>
+            <button
+              onClick={async () => {
+                if (window.confirm("Are you sure you want to delete?")) {
+                  await deletePayroll(payroll._id);
+                  getPayrolls();
+                }
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
+              <FaTrash />
+            </button>
+          </td>
+        </tr>
+      ))
+  ) : (
+    <tr>
+      <td colSpan="8" className="text-center py-8 text-sm font-medium">
+        No payrolls found
+      </td>
+    </tr>
+  )}
+</tbody>
+
         </table>
       </div>
 
