@@ -31,26 +31,40 @@ const Attendance = () => {
   };
 
   const handleSubmit = async () => {
-    if (validationErrors.date) {
-      alert("Please fix validation errors before submitting.");
-      return;
-    }
+  if (validationErrors.date) {
+    alert("Please fix validation errors before submitting.");
+    return;
+  }
 
-    const attendanceArray = filteredWorkers.map(worker => ({
+  if (!selectedDate || !selectedShift) {
+    alert("Please select date and shift");
+    return;
+  }
+
+  // 1️⃣ Check if attendance already exists for this date + shift
+  const existing = await getAttendanceByDateAndShift(selectedDate, selectedShift);
+
+  if (Array.isArray(existing) && existing.length > 0) {
+    alert(`Attendance for ${selectedShift} on ${selectedDate} already exists!`);
+    return;
+  }
+
+  // 2️⃣ Build attendance array
+  const attendanceArray = filteredWorkers.map(worker => ({
     date: selectedDate,
     shift: selectedShift,
     workerId: worker._id,
-    status: attendanceData[worker._id] || "A" // default to A if not selected
-}));
+    status: attendanceData[worker._id] || "A" // default to Absent if not selected
+  }));
 
+  // 3️⃣ Save attendance (one record at a time because backend expects it that way)
+  for (let record of attendanceArray) {
+    await createAttendance(record);
+  }
 
-    for (let record of attendanceArray) {
-      await createAttendance(record);
-    }
-
-    setAttendanceData({});
-    alert("Attendance submitted successfully!");
-  };
+  setAttendanceData({});
+  alert("Attendance saved successfully!");
+}; 
 
   const handleViewAttendance = async () => {
     const data = await getAttendanceByDateAndShift(selectedDate, selectedShift);
