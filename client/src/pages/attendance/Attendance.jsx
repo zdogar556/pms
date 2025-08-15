@@ -36,12 +36,13 @@ const Attendance = () => {
       return;
     }
 
-    const attendanceArray = Object.entries(attendanceData).map(([workerId, status]) => ({
-      date: selectedDate,
-      shift: selectedShift,
-      workerId,
-      status,
-    }));
+    const attendanceArray = filteredWorkers.map(worker => ({
+    date: selectedDate,
+    shift: selectedShift,
+    workerId: worker._id,
+    status: attendanceData[worker._id] || "A" // default to A if not selected
+}));
+
 
     for (let record of attendanceArray) {
       await createAttendance(record);
