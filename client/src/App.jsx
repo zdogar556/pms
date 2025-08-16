@@ -10,6 +10,7 @@ const Home = lazy(() => import("./pages/home/Home"));
 const Worker = lazy(() => import("./pages/worker/Worker"));
 const Setting = lazy(() => import("./pages/settings/Setting"));
 const Production = lazy(() => import("./pages/production/Production"));
+const ProductionStock= lazy(()=>import("./pages/production/productionstock"));
 const Payroll = lazy(() => import("./pages/payroll/Payroll"));
 const Feed = lazy(() => import("./pages/feed/Feed"));
 const Feedconsume = lazy(() => import("./pages/feed/feedConsume"));
@@ -38,6 +39,7 @@ const App = () => {
               <Route path="workers" element={<Worker />} />
               <Route path="settings" element={<Setting />} />
               <Route path="productions" element={<Production />} />
+              <Route path="production-stock" element={<ProductionStock />} />
               <Route path="payrolls" element={<Payroll />} />
               <Route path="feeds" element={<Feed />} />
               <Route path="feedconsume" element={<Feedconsume />} />

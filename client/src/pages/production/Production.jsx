@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { useService } from "../../context";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "../../components/Loader";
 
@@ -65,6 +66,7 @@ const Production = () => {
       [name]: error,
     }));
   };
+  const navigate = useNavigate();
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -126,6 +128,13 @@ const Production = () => {
 
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Production Management</h2>
+        <div className="flex gap-4" >
+          <button
+        className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 ease-in-out flex items-center gap-2"
+           onClick={() => navigate("production-stock")}
+            >
+          Egg Stock
+          </button>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
           onClick={() => {
@@ -138,6 +147,8 @@ const Production = () => {
           <FaPlus className="text-sm" />
           Add Production
         </button>
+        </div>
+        
       </div>
 
       {/* Summary Box */}
