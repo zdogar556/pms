@@ -13,18 +13,12 @@ import {
 } from "recharts";
 
 const ProductionStock = () => {
-  const { productions, getProductions, loading } = useService();
+  const { productions, payrolls, getProductions, getPayrolls, loading } = useService();
 
   useEffect(() => {
     getProductions();
+    getPayrolls(); // ✅ fetch payrolls too
   }, []);
-
-  // Colors for summary cards and chart bars
-  const summaryColors = {
-    totalEggs: "border-blue-600",
-    damagedEggs: "border-red-500",
-    goodEggs: "border-green-600",
-  };
 
   const barColor = "#22c55e"; // Green for good eggs
 
@@ -33,11 +27,32 @@ const ProductionStock = () => {
   const damagedEggs = productions.reduce((sum, p) => sum + Number(p.damagedEggs), 0);
   const goodEggs = totalEggs - damagedEggs;
 
-  // Prepare chart data: good eggs per production date
-  const chartData = productions.map((p) => ({
-    date: new Date(p.date).toLocaleDateString(),
-    goodEggs: p.totalEggs - p.damagedEggs,
-  }));
+  // ✅ subtract sold eggs from payroll
+  const soldEggs = payrolls.reduce((sum, pr) => sum + Number(pr.eggsSold || 0), 0);
+  const availableGoodEggs = goodEggs - soldEggs;
+
+  // ✅ Chart shows running stock (after sales)
+  const productionByDate = productions.reduce((acc, p) => {
+    const date = new Date(p.date).toLocaleDateString();
+    const goodEggs = p.totalEggs - p.damagedEggs;
+    acc[date] = (acc[date] || 0) + goodEggs;
+    return acc;
+  }, {});
+
+  const payrollByDate = payrolls.reduce((acc, pr) => {
+    const date = new Date(pr.date).toLocaleDateString();
+    acc[date] = (acc[date] || 0) + Number(pr.eggsSold || 0);
+    return acc;
+  }, {});
+
+  let runningStock = 0;
+  const chartData = Object.keys(productionByDate)
+    .sort((a, b) => new Date(a) - new Date(b))
+    .map((date) => {
+      runningStock += productionByDate[date]; // add produced good eggs
+      runningStock -= payrollByDate[date] || 0; // subtract sold eggs
+      return { date, stock: runningStock };
+    });
 
   return (
     <div className="p-6">
@@ -47,25 +62,28 @@ const ProductionStock = () => {
         <Loader />
       ) : (
         <>
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-            <div className={`p-4 rounded-lg shadow-md border-t-4 ${summaryColors.totalEggs}`}>
-              <h4 className="font-semibold text-gray-700">Total Eggs</h4>
-              <p className="text-2xl font-bold text-blue-600">{totalEggs} Eggs</p>
-            </div>
-            <div className={`p-4 rounded-lg shadow-md border-t-4 ${summaryColors.damagedEggs}`}>
-              <h4 className="font-semibold text-gray-700">Damaged Eggs</h4>
-              <p className="text-2xl font-bold text-red-500">{damagedEggs} Eggs</p>
-            </div>
-            <div className={`p-4 rounded-lg shadow-md border-t-4 ${summaryColors.goodEggs}`}>
-              <h4 className="font-semibold text-gray-700">Good Eggs</h4>
-              <p className="text-2xl font-bold text-green-600">{goodEggs} Eggs</p>
-            </div>
+          {/* ✅ Only Available Stock Card */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+          <div className="p-4 rounded-lg shadow-md border-t-4 border-green-600">
+          <h4 className="font-semibold text-gray-700">Available Eggs</h4>
+          <p className="text-2xl font-bold text-green-600">{availableGoodEggs} Eggs</p>
+          </div>
+  
+          <div className="p-4 rounded-lg shadow-md border-t-4 border-blue-600">
+          <h4 className="font-semibold text-gray-700">Sold Eggs</h4>
+          <p className="text-2xl font-bold text-blue-600">{soldEggs} Eggs</p>
           </div>
 
-          {/* Bar Chart */}
+          <div className="p-4 rounded-lg shadow-md border-t-4 border-red-600">
+          <h4 className="font-semibold text-gray-700">Damaged Eggs</h4>
+          <p className="text-2xl font-bold text-red-600">{damagedEggs} Eggs</p>
+          </div>
+          </div>
+
+
+          {/* ✅ Stock Chart */}
           <div className="w-full h-96 bg-white rounded-lg shadow-md p-4">
-            <h3 className="text-lg font-semibold mb-4">Good Eggs Per Production Date</h3>
+            <h3 className="text-lg font-semibold mb-4">Stock Over Time</h3>
             {chartData.length > 0 ? (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData}>
@@ -73,7 +91,7 @@ const ProductionStock = () => {
                   <XAxis dataKey="date" />
                   <YAxis />
                   <Tooltip />
-                  <Bar dataKey="goodEggs" barSize={50}>
+                  <Bar dataKey="stock" barSize={50}>
                     {chartData.map((entry, index) => (
                       <Cell key={`cell-${index}`} fill={barColor} />
                     ))}
@@ -90,4 +108,4 @@ const ProductionStock = () => {
   );
 };
 
-export default ProductionStock; 
+export default ProductionStock;
