@@ -38,15 +38,25 @@ const Payroll = () => {
   };
 
   // ✅ calculate available eggs
-  const getGoodEggsInStock = () => {
-    const totalEggs = productions.reduce((sum, p) => sum + Number(p.totalEggs || 0), 0);
-    const damagedEggs = productions.reduce((sum, p) => sum + Number(p.damagedEggs || 0), 0);
-    const goodEggs = totalEggs - damagedEggs;
+  // ✅ calculate available eggs in stock
+const getGoodEggsInStock = (excludeId = null) => {
+  const totalEggs = productions.reduce((sum, p) => sum + Number(p.totalEggs || 0), 0);
+  const damagedEggs = productions.reduce((sum, p) => sum + Number(p.damagedEggs || 0), 0);
+  const goodEggs = totalEggs - damagedEggs;
 
-    const alreadySold = payrolls.reduce((sum, pr) => sum + Number(pr.eggsSold || 0), 0);
+  let alreadySold = payrolls.reduce((sum, pr) => sum + Number(pr.eggsSold || 0), 0);
 
-    return goodEggs - alreadySold;
-  };
+  // ✅ if editing, add back the eggsSold of the record being edited
+  if (excludeId) {
+    const record = payrolls.find((pr) => pr._id === excludeId);
+    if (record) {
+      alreadySold -= Number(record.eggsSold || 0);
+    }
+  }
+
+  return goodEggs - alreadySold;
+};
+
 
   // ✅ input change handler with validations
   const handleInputChange = (e) => {
@@ -75,13 +85,17 @@ const Payroll = () => {
 
     // ✅ stock validation for eggsSold
     if (name === "eggsSold") {
-      const availableGoodEggs = getGoodEggsInStock();
-      if (numericValue > availableGoodEggs) {
-        errors.eggsSold = `Not enough stock. Available: ${availableGoodEggs}`;
-      } else if (!errors.eggsSold) {
-        delete errors.eggsSold;
-      }
-    }
+  const availableGoodEggs = getGoodEggsInStock(
+    actionType === "update" ? updatePayrollId : null
+  );
+
+  if (numericValue > availableGoodEggs) {
+    errors.eggsSold = `Not enough stock. Available: ${availableGoodEggs}`;
+  } else {
+    delete errors.eggsSold;
+  }
+}
+
 
     setValidationErrors(errors);
     setNewPayroll({ ...newPayroll, [name]: value });
