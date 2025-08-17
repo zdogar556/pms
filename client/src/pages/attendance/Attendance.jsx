@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useService } from "../../context";
 import Loader from "../../components/Loader";
+import { useNavigate } from "react-router-dom";
 
 const Attendance = () => {
   const {
@@ -12,12 +13,13 @@ const Attendance = () => {
   } = useService();
 
   const [selectedShift, setSelectedShift] = useState("Morning");
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().substr(0, 10));
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().substr(0, 10)
+  );
   const [attendanceData, setAttendanceData] = useState({});
   const [validationErrors, setValidationErrors] = useState({});
 
-  const [viewMode, setViewMode] = useState(false);
-  const [viewResults, setViewResults] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     getWorkers();
@@ -31,45 +33,44 @@ const Attendance = () => {
   };
 
   const handleSubmit = async () => {
-  if (validationErrors.date) {
-    alert("Please fix validation errors before submitting.");
-    return;
-  }
+    if (validationErrors.date) {
+      alert("Please fix validation errors before submitting.");
+      return;
+    }
 
-  if (!selectedDate || !selectedShift) {
-    alert("Please select date and shift");
-    return;
-  }
+    if (!selectedDate || !selectedShift) {
+      alert("Please select date and shift");
+      return;
+    }
 
-  // 1️⃣ Check if attendance already exists for this date + shift
-  const existing = await getAttendanceByDateAndShift(selectedDate, selectedShift);
+    // 1️⃣ Check if attendance already exists for this date + shift
+    const existing = await getAttendanceByDateAndShift(
+      selectedDate,
+      selectedShift
+    );
 
-  if (Array.isArray(existing) && existing.length > 0) {
-    alert(`Attendance for ${selectedShift} on ${selectedDate} already exists!`);
-    return;
-  }
+    if (Array.isArray(existing) && existing.length > 0) {
+      alert(
+        `Attendance for ${selectedShift} on ${selectedDate} already exists!`
+      );
+      return;
+    }
 
-  // 2️⃣ Build attendance array
-  const attendanceArray = filteredWorkers.map(worker => ({
-    date: selectedDate,
-    shift: selectedShift,
-    workerId: worker._id,
-    status: attendanceData[worker._id] || "A" // default to Absent if not selected
-  }));
+    // 2️⃣ Build attendance array
+    const attendanceArray = filteredWorkers.map((worker) => ({
+      date: selectedDate,
+      shift: selectedShift,
+      workerId: worker._id,
+      status: attendanceData[worker._id] || "A", // default to Absent
+    }));
 
-  // 3️⃣ Save attendance (one record at a time because backend expects it that way)
-  for (let record of attendanceArray) {
-    await createAttendance(record);
-  }
+    // 3️⃣ Save attendance
+    for (let record of attendanceArray) {
+      await createAttendance(record);
+    }
 
-  setAttendanceData({});
-  alert("Attendance saved successfully!");
-}; 
-
-  const handleViewAttendance = async () => {
-    const data = await getAttendanceByDateAndShift(selectedDate, selectedShift);
-    setViewResults(Array.isArray(data) ? data : []);
-    setViewMode(true);
+    setAttendanceData({});
+    alert("Attendance saved successfully!");
   };
 
   const handleDateChange = (value) => {
@@ -90,13 +91,15 @@ const Attendance = () => {
     setValidationErrors(errors);
   };
 
-  const filteredWorkers = workers.filter((worker) => worker.shift === selectedShift);
+  const filteredWorkers = workers.filter(
+    (worker) => worker.shift === selectedShift
+  );
 
   return (
     <div className="p-4">
       <h2 className="text-xl font-semibold mb-4">Attendance</h2>
 
-      {/* Controls in single row */}
+      {/* Controls */}
       <div className="flex flex-wrap items-start gap-4 mb-4">
         <div className="flex flex-col">
           <label>
@@ -109,7 +112,9 @@ const Attendance = () => {
             />
           </label>
           {validationErrors.date && (
-            <span className="text-red-500 text-sm mt-1">{validationErrors.date}</span>
+            <span className="text-red-500 text-sm mt-1">
+              {validationErrors.date}
+            </span>
           )}
         </div>
 
@@ -126,62 +131,24 @@ const Attendance = () => {
           </select>
         </label>
 
-        {!viewMode ? (
-          <>
-            <button
-              className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
-              onClick={handleSubmit}
-            >
-              Submit Attendance
-            </button>
-            <button
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
-              onClick={handleViewAttendance}
-            >
-              View Attendance
-            </button>
-          </>
-        ) : (
-          <button
-            className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition"
-            onClick={() => setViewMode(false)}
-          >
-            Back to Marking
-          </button>
-        )}
+        <button
+          className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition"
+          onClick={handleSubmit}
+        >
+          Submit Attendance
+        </button>
+
+        {/* ✅ Navigate to ViewAttendance Page */}
+        <button
+          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition"
+          onClick={() => navigate("/pms/worker/attendance/viewattendance")}
+        >
+          View Attendance
+        </button>
       </div>
 
       {loading ? (
         <Loader />
-      ) : viewMode ? (
-        <div className="overflow-x-auto">
-          <table className="w-full border text-sm">
-            <thead>
-              <tr className="bg-gray-200 text-left">
-                <th className="p-2 border">#</th>
-                <th className="p-2 border">Worker Name</th>
-                <th className="p-2 border">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {viewResults.length > 0 ? (
-                viewResults.map((record, index) => (
-                  <tr key={record._id} className="hover:bg-gray-50">
-                    <td className="p-2 border">{index + 1}</td>
-                    <td className="p-2 border">{record.worker?.name || "Unknown"}</td>
-                    <td className="p-2 border">{record.status}</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan="3" className="text-center py-4 text-gray-500">
-                    No attendance found for selected date and shift.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
       ) : (
         <div className="w-full overflow-x-auto">
           <table className="w-full border text-sm">

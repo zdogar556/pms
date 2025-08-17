@@ -18,6 +18,7 @@ const PoultryBatches = lazy(() => import("./pages/poultry-batches/poultry-batche
 const PoultryBatchRecord = lazy(() => import("./pages/poultry-batches/poultry-batch-record"));
 const Reports=lazy(()=>import("./pages/reports/Reports"));
 const Attendance=lazy(()=>import("./pages/attendance/Attendance"));
+const Viewattendance=lazy(()=>import("./pages/attendance/Viewattendance"));
 const FeedStock=lazy(()=>import("./pages/feed/FeedStock"))
 
 const Loader = () => <div className="flex items-center justify-center h-screen">Loading...</div>;
@@ -47,6 +48,7 @@ const App = () => {
               <Route path="batch/:batchId/records" element={<PoultryBatchRecord />} />
               <Route path="reports" element={<Reports />} />
               <Route path="worker/attendance" element={<Attendance />} /> 
+              <Route path="worker/attendance/viewattendance" element={<Viewattendance />} />
               <Route path="feed-stock" element={<FeedStock />} />
               <Route path="*" element={<Navigate to="/pms/" />} />
             </Route>
