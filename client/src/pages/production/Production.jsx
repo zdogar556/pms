@@ -179,52 +179,54 @@ const Production = () => {
             </tr>
           </thead>
           <tbody>
-            {productions.length > 0 ? (
-              productions.map((production) => (
-                <tr
-                  key={production._id}
-                  className="border-b hover:bg-gray-100"
-                >
-                  <td className="px-4 py-3 text-center">
-                    {formatDate(production.date)}
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {production.totalEggs} Eggs
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {production.damagedEggs} Eggs
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {production.totalEggs - production.damagedEggs} Eggs
-                  </td>
-                  <td className="px-4 py-3 flex gap-2 text-center">
-                    <button
-                      onClick={() => handleEdit(production._id)}
-                      className="text-blue-500 hover:text-blue-700"
-                    >
-                      <FaEdit />
-                    </button>
-                    <button
-                      onClick={async () => {
-                        if (window.confirm("Are you sure you want to delete?")) {
-                          await deleteProduction(production._id);
-                        }
-                      }}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      <FaTrash />
-                    </button>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan="5" className="text-center py-4">
-                  No production records found.
-                </td>
-              </tr>
-            )}
-          </tbody>
+          {productions.length > 0 ? (
+          [...productions] // create a copy so we don’t mutate original state
+          .sort((a, b) => new Date(b.date) - new Date(a.date)) // sort by date DESC
+          .map((production) => (
+        <tr
+          key={production._id}
+          className="border-b hover:bg-gray-100"
+        >
+          <td className="px-4 py-3 text-center">
+            {formatDate(production.date)}
+          </td>
+          <td className="px-4 py-3 text-center">
+            {production.totalEggs} Eggs
+          </td>
+          <td className="px-4 py-3 text-center">
+            {production.damagedEggs} Eggs
+          </td>
+          <td className="px-4 py-3 text-center">
+            {production.totalEggs - production.damagedEggs} Eggs
+          </td>
+          <td className="px-4 py-3 flex gap-2 text-center">
+            <button
+              onClick={() => handleEdit(production._id)}
+              className="text-blue-500 hover:text-blue-700"
+            >
+              <FaEdit />
+            </button>
+            <button
+              onClick={async () => {
+                if (window.confirm("Are you sure you want to delete?")) {
+                  await deleteProduction(production._id);
+                }
+              }}
+              className="text-red-500 hover:text-red-700"
+            >
+              <FaTrash />
+            </button>
+          </td>
+        </tr>
+        ))
+        ) : (
+        <tr>
+         <td colSpan="5" className="text-center py-4">
+        No production records found.
+      </td>
+       </tr>
+      )}
+      </tbody>
         </table>
       </div>
 
