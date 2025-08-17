@@ -46,7 +46,7 @@ const App = () => {
               <Route path="batch" element={<PoultryBatches />} />
               <Route path="batch/:batchId/records" element={<PoultryBatchRecord />} />
               <Route path="reports" element={<Reports />} />
-              <Route path="attendance" element={<Attendance />} /> 
+              <Route path="worker/attendance" element={<Attendance />} /> 
               <Route path="feed-stock" element={<FeedStock />} />
               <Route path="*" element={<Navigate to="/pms/" />} />
             </Route>
