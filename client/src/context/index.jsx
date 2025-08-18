@@ -230,16 +230,31 @@ const getAttendanceById = async (id) => {
 const createAttendance = async (newAttendance) => {
   try {
     setLoading(true);
-    const { data } = await axios.post(`${URL}/attendance`, newAttendance, mutation);
-    setAttendance([...attendance, data.attendance]);
-    toast.success(data.message);
+
+    const res = await axios.post(`${URL}/attendance`, newAttendance, mutation);
+    console.log("Raw axios response:", res);
+
+    const { data } = res;
+    console.log("Attendance response:", data);
+
+    const saved = data.attendance || data.newAttendance || data.savedAttendance;
+    if (saved) {
+      setAttendance([...(attendance || []), saved]);   // ✅ prevents "not iterable"
+    }
+
+    toast.success(data.message || "Attendance created successfully");
+    return data;
   } catch (error) {
+    console.error("CreateAttendance Error:", error.response?.data || error.message);
     toast.error(error?.response?.data?.message || "Failed to create attendance");
-    console.log(error.message);
+    return null;
   } finally {
     setLoading(false);
   }
 };
+
+
+
 
 const updateAttendance = async (id, updatedAttendance) => {
   try {
@@ -283,6 +298,43 @@ const getAttendanceByDateAndShift = async (date, shift) => {
     setLoading(false);
   }
 };
+// Update a single attendance record
+const updateAttendanceRecord = async (attendanceId, recordId, payload) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.patch(
+      `${URL}/attendance/${attendanceId}/records/${recordId}`,
+      payload,
+      mutation
+    );
+    toast.success(data.message);
+    return data.updatedAttendance;
+  } catch (error) {
+    console.error("Error updating attendance record:", error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
+const deleteAttendanceRecord = async (attendanceId, recordId) => {
+  try {
+    setLoading(true);
+    const { data } = await axios.delete(
+      `${URL}/attendance/${attendanceId}/records/${recordId}`,
+      mutation
+    );
+    toast.success(data.message);
+    return data.deletedAttendance;
+  } catch (error) {
+    console.error("Error deleting attendance record:", error);
+    throw error;
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
 
 
@@ -778,7 +830,9 @@ const deleteBatch = async (id) => {
         createAttendance,
         updateAttendance,
         deleteAttendance,
-        getAttendanceByDateAndShift,   
+        getAttendanceByDateAndShift, 
+        updateAttendanceRecord,   // ✅ export
+        deleteAttendanceRecord,   // ✅ export
         getFeeds,
         getFeedById,
         createFeed,

@@ -59,8 +59,9 @@ import {
   createAttendance,
   getAttendances,
   getAttendanceByDateAndShift,
+  updateAttendanceRecord,     // ✅ add
+  deleteAttendanceRecord,     // ✅ add
 } from "../controllers/attendance.controller.js";
-
 import verifyToken from "../middlewares/auth.middleware.js"
 import { getInsights } from "../controllers/insight.controller.js";
 
@@ -128,6 +129,8 @@ router.delete("/poultryrecord/:id", verifyToken, deletePoultryRecord);
 router.post("/attendance", verifyToken, createAttendance);
 router.get("/attendance", verifyToken, getAttendances);
 router.get("/attendance/search", verifyToken, getAttendanceByDateAndShift);
+router.patch("/attendance/:attendanceId/records/:recordId", verifyToken, updateAttendanceRecord);
+router.delete("/attendance/:attendanceId/records/:recordId", verifyToken, deleteAttendanceRecord);
 
 
 export default router;

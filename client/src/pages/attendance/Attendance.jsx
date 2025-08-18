@@ -33,45 +33,52 @@ const Attendance = () => {
   };
 
   const handleSubmit = async () => {
-    if (validationErrors.date) {
-      alert("Please fix validation errors before submitting.");
-      return;
-    }
+  if (validationErrors.date) {
+    alert("Please fix validation errors before submitting.");
+    return;
+  }
 
-    if (!selectedDate || !selectedShift) {
-      alert("Please select date and shift");
-      return;
-    }
+  if (!selectedDate || !selectedShift) {
+    alert("Please select date and shift");
+    return;
+  }
 
-    // 1️⃣ Check if attendance already exists for this date + shift
-    const existing = await getAttendanceByDateAndShift(
-      selectedDate,
-      selectedShift
+  // 1️⃣ Check if attendance already exists
+  const existing = await getAttendanceByDateAndShift(
+    selectedDate,
+    selectedShift
+  );
+
+  if (existing && existing.records && existing.records.length > 0) {
+    alert(
+      `Attendance for ${selectedShift} on ${selectedDate} already exists!`
     );
+    return;
+  }
 
-    if (Array.isArray(existing) && existing.length > 0) {
-      alert(
-        `Attendance for ${selectedShift} on ${selectedDate} already exists!`
-      );
-      return;
-    }
+  // 2️⃣ Build records array (not per worker object)
+  const records = filteredWorkers.map((worker) => ({
+    worker: worker._id,
+    status: attendanceData[worker._id] || "A", // default Absent
+  }));
 
-    // 2️⃣ Build attendance array
-    const attendanceArray = filteredWorkers.map((worker) => ({
-      date: selectedDate,
-      shift: selectedShift,
-      workerId: worker._id,
-      status: attendanceData[worker._id] || "A", // default to Absent
-    }));
+  // 3️⃣ Correct payload for backend
+  const payload = {
+    date: selectedDate,
+    shift: selectedShift,
+    records,
+  };
 
-    // 3️⃣ Save attendance
-    for (let record of attendanceArray) {
-      await createAttendance(record);
-    }
-
+  try {
+    await createAttendance(payload); // ✅ send once
     setAttendanceData({});
     alert("Attendance saved successfully!");
-  };
+  } catch (err) {
+    console.error("Error saving attendance:", err);
+    alert("Failed to save attendance");
+  }
+};
+
 
   const handleDateChange = (value) => {
     setSelectedDate(value);
