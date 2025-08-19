@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { FaEdit, FaTrash, FaPlus } from "react-icons/fa";
+import { FaEdit, FaTrash, FaPlus, FaChartLine } from "react-icons/fa";
 import { useService } from "../../context";
 import { motion, AnimatePresence } from "framer-motion";
 import Loader from "../../components/Loader";
@@ -8,8 +8,8 @@ const Payroll = () => {
   const {
     loading,
     payrolls,
-    productions,       // ✅ bring productions
-    getProductions,    // ✅ fetch productions
+    productions,
+    getProductions,
     getPayrolls,
     createPayroll,
     getPayrollById,
@@ -30,35 +30,38 @@ const Payroll = () => {
     totalExpense: "",
   });
 
-  // ✅ normalize date
   const normalizeDate = (dateStr) => {
     const d = new Date(dateStr);
     d.setHours(0, 0, 0, 0);
     return d;
   };
 
-  // ✅ calculate available eggs
-  // ✅ calculate available eggs in stock
-const getGoodEggsInStock = (excludeId = null) => {
-  const totalEggs = productions.reduce((sum, p) => sum + Number(p.totalEggs || 0), 0);
-  const damagedEggs = productions.reduce((sum, p) => sum + Number(p.damagedEggs || 0), 0);
-  const goodEggs = totalEggs - damagedEggs;
+  const getGoodEggsInStock = (excludeId = null) => {
+    const totalEggs = productions.reduce(
+      (sum, p) => sum + Number(p.totalEggs || 0),
+      0
+    );
+    const damagedEggs = productions.reduce(
+      (sum, p) => sum + Number(p.damagedEggs || 0),
+      0
+    );
+    const goodEggs = totalEggs - damagedEggs;
 
-  let alreadySold = payrolls.reduce((sum, pr) => sum + Number(pr.eggsSold || 0), 0);
+    let alreadySold = payrolls.reduce(
+      (sum, pr) => sum + Number(pr.eggsSold || 0),
+      0
+    );
 
-  // ✅ if editing, add back the eggsSold of the record being edited
-  if (excludeId) {
-    const record = payrolls.find((pr) => pr._id === excludeId);
-    if (record) {
-      alreadySold -= Number(record.eggsSold || 0);
+    if (excludeId) {
+      const record = payrolls.find((pr) => pr._id === excludeId);
+      if (record) {
+        alreadySold -= Number(record.eggsSold || 0);
+      }
     }
-  }
 
-  return goodEggs - alreadySold;
-};
+    return goodEggs - alreadySold;
+  };
 
-
-  // ✅ input change handler with validations
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     const numericValue = parseFloat(value);
@@ -77,25 +80,26 @@ const getGoodEggsInStock = (excludeId = null) => {
 
     if (["eggsSold", "pricePerEgg", "totalExpense"].includes(name)) {
       if (numericValue <= 0 || isNaN(numericValue)) {
-        errors[name] = `${name.replace(/([A-Z])/g, " $1")} must be greater than 0.`;
+        errors[name] = `${name.replace(
+          /([A-Z])/g,
+          " $1"
+        )} must be greater than 0.`;
       } else {
         delete errors[name];
       }
     }
 
-    // ✅ stock validation for eggsSold
     if (name === "eggsSold") {
-  const availableGoodEggs = getGoodEggsInStock(
-    actionType === "update" ? updatePayrollId : null
-  );
+      const availableGoodEggs = getGoodEggsInStock(
+        actionType === "update" ? updatePayrollId : null
+      );
 
-  if (numericValue > availableGoodEggs) {
-    errors.eggsSold = `Not enough stock. Available: ${availableGoodEggs}`;
-  } else {
-    delete errors.eggsSold;
-  }
-}
-
+      if (numericValue > availableGoodEggs) {
+        errors.eggsSold = `Not enough stock. Available: ${availableGoodEggs}`;
+      } else {
+        delete errors.eggsSold;
+      }
+    }
 
     setValidationErrors(errors);
     setNewPayroll({ ...newPayroll, [name]: value });
@@ -127,7 +131,9 @@ const getGoodEggsInStock = (excludeId = null) => {
     if (id) {
       const payroll = await getPayrollById(id);
       setNewPayroll({
-        date: payroll.date ? new Date(payroll.date).toISOString().split("T")[0] : "",
+        date: payroll.date
+          ? new Date(payroll.date).toISOString().split("T")[0]
+          : "",
         eggsSold: payroll.eggsSold || "",
         pricePerEgg: payroll.pricePerEgg || "",
         totalExpense: payroll.totalExpense || "",
@@ -140,8 +146,13 @@ const getGoodEggsInStock = (excludeId = null) => {
 
   useEffect(() => {
     getPayrolls();
-    getProductions(); // ✅ fetch stock
+    getProductions();
   }, []);
+
+  const totalNetProfit = payrolls.reduce(
+    (sum, pr) => sum + Number(pr.netProfit || 0),
+    0
+  );
 
   const modalVariants = {
     hidden: { opacity: 0, scale: 0.95 },
@@ -153,6 +164,7 @@ const getGoodEggsInStock = (excludeId = null) => {
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
 
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-semibold">Payroll Management</h2>
         <button
@@ -163,6 +175,20 @@ const getGoodEggsInStock = (excludeId = null) => {
         </button>
       </div>
 
+      {/* ✅ Styled Net Profit Summary with Trending Icon */}
+      <div className="mb-6 flex">
+        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-green-600 w-72 flex items-center space-x-4">
+          <FaChartLine className="text-green-600 text-4xl" />
+          <div>
+            <h4 className="font-semibold text-gray-700">Total Net Profit</h4>
+            <p className="text-2xl font-bold text-green-600">
+              RS - {totalNetProfit}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Table */}
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
           <thead className="bg-[#2A2A40] text-white">
@@ -183,13 +209,25 @@ const getGoodEggsInStock = (excludeId = null) => {
                 .sort((a, b) => new Date(b.date) - new Date(a.date))
                 .map((payroll) => (
                   <tr key={payroll._id} className="border-b hover:bg-gray-100">
-                    <td className="px-4 py-3 text-center">{formatDate(payroll.date)}</td>
+                    <td className="px-4 py-3 text-center">
+                      {formatDate(payroll.date)}
+                    </td>
                     <td className="px-4 py-3 text-center">{payroll.eggsSold}</td>
-                    <td className="px-4 py-3 text-center">RS - {payroll.pricePerEgg}</td>
-                    <td className="px-4 py-3 text-center">RS - {payroll.totalExpense}</td>
-                    <td className="px-4 py-3 text-center">RS - {payroll.totalRevenue}</td>
-                    <td className="px-4 py-3 text-center">RS - {payroll.totalSalaries}</td>
-                    <td className="px-4 py-3 text-center">RS - {payroll.netProfit}</td>
+                    <td className="px-4 py-3 text-center">
+                      RS - {payroll.pricePerEgg}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      RS - {payroll.totalExpense}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      RS - {payroll.totalRevenue}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      RS - {payroll.totalSalaries}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      RS - {payroll.netProfit}
+                    </td>
                     <td className="pl-12 py-3 flex space-x-2">
                       <button
                         onClick={() => handleEdit(payroll._id)}
@@ -199,7 +237,9 @@ const getGoodEggsInStock = (excludeId = null) => {
                       </button>
                       <button
                         onClick={async () => {
-                          if (window.confirm("Are you sure you want to delete?")) {
+                          if (
+                            window.confirm("Are you sure you want to delete?")
+                          ) {
                             await deletePayroll(payroll._id);
                             getPayrolls();
                           }
@@ -213,7 +253,10 @@ const getGoodEggsInStock = (excludeId = null) => {
                 ))
             ) : (
               <tr>
-                <td colSpan="8" className="text-center py-8 text-sm font-medium">
+                <td
+                  colSpan="8"
+                  className="text-center py-8 text-sm font-medium"
+                >
                   No payrolls found
                 </td>
               </tr>
@@ -243,13 +286,7 @@ const getGoodEggsInStock = (excludeId = null) => {
                 {actionType === "create" ? "Add New Payroll" : "Update Payroll"}
               </h3>
 
-              {/* ✅ Show available stock */}
-              {/* <p className="text-sm text-gray-600 mb-2">
-                Available Good Eggs: <span className="font-bold">{getGoodEggsInStock()}</span>
-              </p> */}
-
               <div className="flex flex-col gap-4">
-                {/* Date */}
                 <div>
                   <input
                     type="date"
@@ -262,11 +299,12 @@ const getGoodEggsInStock = (excludeId = null) => {
                     required
                   />
                   {validationErrors.date && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.date}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.date}
+                    </p>
                   )}
                 </div>
 
-                {/* Eggs Sold */}
                 <div>
                   <input
                     type="number"
@@ -275,16 +313,19 @@ const getGoodEggsInStock = (excludeId = null) => {
                     value={newPayroll.eggsSold}
                     onChange={handleInputChange}
                     className={`border p-2.5 rounded-md w-full ${
-                      validationErrors.eggsSold ? "border-red-500" : "border-gray-300"
+                      validationErrors.eggsSold
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     required
                   />
                   {validationErrors.eggsSold && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.eggsSold}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.eggsSold}
+                    </p>
                   )}
                 </div>
 
-                {/* Price Per Egg */}
                 <div>
                   <input
                     type="number"
@@ -293,16 +334,19 @@ const getGoodEggsInStock = (excludeId = null) => {
                     value={newPayroll.pricePerEgg}
                     onChange={handleInputChange}
                     className={`border p-2.5 rounded-md w-full ${
-                      validationErrors.pricePerEgg ? "border-red-500" : "border-gray-300"
+                      validationErrors.pricePerEgg
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     required
                   />
                   {validationErrors.pricePerEgg && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.pricePerEgg}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.pricePerEgg}
+                    </p>
                   )}
                 </div>
 
-                {/* Total Expense */}
                 <div>
                   <input
                     type="number"
@@ -311,16 +355,19 @@ const getGoodEggsInStock = (excludeId = null) => {
                     value={newPayroll.totalExpense}
                     onChange={handleInputChange}
                     className={`border p-2.5 rounded-md w-full ${
-                      validationErrors.totalExpense ? "border-red-500" : "border-gray-300"
+                      validationErrors.totalExpense
+                        ? "border-red-500"
+                        : "border-gray-300"
                     }`}
                     required
                   />
                   {validationErrors.totalExpense && (
-                    <p className="text-red-500 text-xs mt-1">{validationErrors.totalExpense}</p>
+                    <p className="text-red-500 text-xs mt-1">
+                      {validationErrors.totalExpense}
+                    </p>
                   )}
                 </div>
 
-                {/* Buttons */}
                 <div className="flex justify-end gap-3 mt-6">
                   <button
                     className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
