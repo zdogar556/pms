@@ -56,6 +56,13 @@ import {
   deletePoultryRecord,
 } from "../controllers/poultryRecord.controller.js";
 import {
+  getVaccinations,
+  createVaccination,
+  updateVaccination,
+  deleteVaccination,
+  generateSchedule,
+} from "../controllers/vaccination.controller.js";
+import {
   createAttendance,
   getAttendances,
   getAttendanceByDateAndShift,
@@ -125,6 +132,12 @@ router.get("/poultryrecord", verifyToken, getPoultryRecords);
 router.get("/poultryrecord/:id", verifyToken, getPoultryRecordById);
 router.patch("/poultryrecord/:id", verifyToken, updatePoultryRecord);
 router.delete("/poultryrecord/:id", verifyToken, deletePoultryRecord);
+// Vaccination
+router.get("/", getVaccinations);               // GET /api/vaccination?batchId=...
+router.post("/", createVaccination);           // POST /api/vaccination
+router.patch("/:id", updateVaccination);       // PATCH /api/vaccination/:id
+router.delete("/:id", deleteVaccination);      // DELETE /api/vaccination/:id
+router.post("/schedule/:batchId", generateSchedule);
 // ✅ Attendance Routes (define directly here)
 router.post("/attendance", verifyToken, createAttendance);
 router.get("/attendance", verifyToken, getAttendances);

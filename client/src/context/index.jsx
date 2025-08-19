@@ -34,6 +34,7 @@ const ServiceProvider = ({ children }) => {
   const [batches, setBatches] = useState([]);
   const [productions, setProductions] = useState([]);
   const [poultryRecords, setPoultryRecords] = useState([]);
+  const [vaccinations, setVaccinations] = useState([]);
   const [payrolls, setPayrolls] = useState([]);
   const [loggedInUser, setloggedInUser] = useState(
     JSON.parse(localStorage.getItem("admin")) || null
@@ -785,6 +786,95 @@ const deleteBatch = async (id) => {
       setLoading(false);
     }
   };
+  
+  // ✅ Get all vaccinations by batch
+  const getVaccinationsByBatch = async (batchId) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.get(`${URL}?batchId=${batchId}`);
+      return data; // { vaccinations: [...] }
+    } catch (error) {
+      console.log("Error fetching vaccinations:", error);
+      toast.error(error.response?.data?.message || "Failed to fetch vaccinations");
+      return { vaccinations: [] };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Create a vaccination
+  const createVaccination = async (record) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.post(URL, record);
+      setVaccinations((prev) => [...prev, data]);
+      toast.success("Vaccination record created");
+      return data;
+    } catch (error) {
+      console.log("Error creating vaccination:", error);
+      toast.error(error.response?.data?.message || "Failed to create vaccination");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Update vaccination
+  const updateVaccination = async (id, record) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.patch(`${URL}/${id}`, record);
+      setVaccinations((prev) =>
+        prev.map((v) => (v._id === id ? data : v))
+      );
+      toast.success("Vaccination updated");
+      return data;
+    } catch (error) {
+      console.log("Error updating vaccination:", error);
+      toast.error(error.response?.data?.message || "Failed to update vaccination");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Delete vaccination
+  const deleteVaccination = async (id) => {
+    try {
+      setLoading(true);
+      await axios.delete(`${URL}/${id}`);
+      setVaccinations((prev) => prev.filter((v) => v._id !== id));
+      toast.success("Vaccination deleted");
+    } catch (error) {
+      console.log("Error deleting vaccination:", error);
+      toast.error(error.response?.data?.message || "Failed to delete vaccination");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Generate schedule for a batch
+  const generateSchedule = async (batchId) => {
+    try {
+      setLoading(true);
+      const { data } = await axios.post(`${URL}/schedule/${batchId}`);
+      setVaccinations(data.schedule.map((s, index) => ({
+        _id: `${index}-${batchId}`,
+        batch: batchId,
+        vaccineName: s.vaccine,
+        day: s.day,
+        status: "Pending",
+        dateGiven: null,
+      })));
+      toast.success("Vaccination schedule generated");
+      return { vaccinations };
+    } catch (error) {
+      console.log("Error generating schedule:", error);
+      toast.error(error.response?.data?.message || "Failed to generate schedule");
+      return { vaccinations: [] };
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   useEffect(() => {
     getFeeds();
@@ -813,6 +903,13 @@ const deleteBatch = async (id) => {
         createPoultryRecord,
         updatePoultryRecord,
         deletePoultryRecord,
+        vaccinations,
+        setVaccinations,
+        getVaccinationsByBatch,
+        createVaccination,
+        updateVaccination,
+        deleteVaccination,
+        generateSchedule,
         formatDate,
         register,
         signIn,

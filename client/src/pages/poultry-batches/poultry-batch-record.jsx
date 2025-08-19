@@ -4,9 +4,12 @@ import { useService } from "../../context";
 import { FaPlus, FaEdit, FaTrash } from "react-icons/fa";
 import { AnimatePresence, motion } from "framer-motion";
 import Loader from "../../components/Loader";
+import { useNavigate } from "react-router-dom";
+
 
 const PoultryBatchRecord = () => {
   const { batchId } = useParams();
+  const navigate = useNavigate();
   const {
     loading,
     getBatchById,
@@ -17,6 +20,9 @@ const PoultryBatchRecord = () => {
     updatePoultryRecord,
     deletePoultryRecord,
   } = useService();
+
+   
+  
 
   const [batch, setBatch] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -133,6 +139,14 @@ const PoultryBatchRecord = () => {
             </p>
           )}
         </div>
+        <div className="flex gap-4">
+          <button
+      className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2 "
+      onClick={() => navigate(`/pms/batch/${batchId}/vaccination`)}
+    >
+      <FaPlus className="text-sm" />
+      Vaccination
+    </button>
         <button
           className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
           onClick={() => {
@@ -143,6 +157,8 @@ const PoultryBatchRecord = () => {
           <FaPlus className="text-sm" />
           Add Record
         </button>
+        </div>
+        
       </div>
 
       <div className="overflow-x-auto">

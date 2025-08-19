@@ -16,6 +16,7 @@ const Feed = lazy(() => import("./pages/feed/Feed"));
 const Feedconsume = lazy(() => import("./pages/feed/feedConsume"));
 const PoultryBatches = lazy(() => import("./pages/poultry-batches/poultry-batches"));
 const PoultryBatchRecord = lazy(() => import("./pages/poultry-batches/poultry-batch-record"));
+const VaccinationPage=lazy(()=>import("./pages/poultry-batches/vaccinationpage"));
 const Reports=lazy(()=>import("./pages/reports/Reports"));
 const Attendance=lazy(()=>import("./pages/attendance/Attendance"));
 const Viewattendance=lazy(()=>import("./pages/attendance/Viewattendance"));
@@ -46,6 +47,7 @@ const App = () => {
               <Route path="feedconsume" element={<Feedconsume />} />
               <Route path="batch" element={<PoultryBatches />} />
               <Route path="batch/:batchId/records" element={<PoultryBatchRecord />} />
+              <Route path="batch/:batchId/vaccination" element={<VaccinationPage />} />
               <Route path="reports" element={<Reports />} />
               <Route path="worker/attendance" element={<Attendance />} /> 
               <Route path="worker/attendance/viewattendance" element={<Viewattendance />} />
