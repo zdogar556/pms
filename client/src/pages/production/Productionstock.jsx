@@ -12,13 +12,14 @@ import {
 } from "recharts";
 
 const ProductionStock = () => {
-  const { loading, productions, payrolls, getProductions, getPayrolls } = useService(); // ✅ use getPayrolls
+  const { loading, productions, payrolls, getProductions, getPayrolls } =
+    useService();
   const [availableGoodEggs, setAvailableGoodEggs] = useState(0);
   const [chartData, setChartData] = useState([]);
 
   useEffect(() => {
     getProductions();
-    getPayrolls(); // ✅ fixed function name
+    getPayrolls();
   }, []);
 
   useEffect(() => {
@@ -39,11 +40,17 @@ const ProductionStock = () => {
     }, {});
 
     // ✅ Calculate available good eggs
-    const totalGood = productions.reduce((sum, p) => sum + (p.goodEggs || 0), 0);
-    const totalSold = payrolls.reduce((sum, pr) => sum + (pr.eggsSold || 0), 0);
+    const totalGood = productions.reduce(
+      (sum, p) => sum + (p.goodEggs || 0),
+      0
+    );
+    const totalSold = payrolls.reduce(
+      (sum, pr) => sum + (pr.eggsSold || 0),
+      0
+    );
     setAvailableGoodEggs(totalGood - totalSold);
 
-    // ✅ Merge all dates (both production + payroll)
+    // ✅ Merge all dates
     const allDates = [
       ...new Set([
         ...productions.map((p) => new Date(p.date).toLocaleDateString()),
@@ -67,29 +74,42 @@ const ProductionStock = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6 text-gray-800">Egg Stock Overview</h2>
+    <div className="p-4 sm:p-6">
+      <h2 className="text-xl sm:text-2xl font-bold mb-6 text-gray-800 text-center sm:text-left">
+        Egg Stock Overview
+      </h2>
 
-      {/* ✅ Available Eggs Card (not full width) */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 max-w-4xl">
-        <div className="p-4 rounded-lg shadow-md border-t-4 border-green-600 bg-white">
+      {/* ✅ Available Eggs Card */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8 max-w-5xl mx-auto w-full">
+        <div className="p-4 rounded-lg shadow-md border-t-4 border-green-600 bg-white text-center sm:text-left">
           <h4 className="font-semibold text-gray-700">Available Eggs</h4>
-          <p className="text-2xl font-bold text-green-600">{availableGoodEggs} Eggs</p>
+          <p className="text-xl sm:text-2xl font-bold text-green-600">
+            {availableGoodEggs} Eggs
+          </p>
         </div>
       </div>
 
       {/* ✅ Stock Trend Chart */}
-      <div className="bg-white p-4 rounded-lg shadow-md">
-        <h4 className="font-semibold text-gray-700 mb-4">Stock Trend Over Time</h4>
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="date" />
-            <YAxis />
-            <Tooltip />
-            <Line type="monotone" dataKey="stock" stroke="#16a34a" strokeWidth={3} />
-          </LineChart>
-        </ResponsiveContainer>
+      <div className="bg-white p-3 sm:p-4 rounded-lg shadow-md">
+        <h4 className="font-semibold text-gray-700 mb-4 text-center sm:text-left">
+          Stock Trend Over Time
+        </h4>
+        <div className="w-full h-[250px] sm:h-[400px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fontSize: 10 }} />
+              <YAxis tick={{ fontSize: 10 }} />
+              <Tooltip />
+              <Line
+                type="monotone"
+                dataKey="stock"
+                stroke="#16a34a"
+                strokeWidth={3}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
     </div>
   );
