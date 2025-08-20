@@ -174,48 +174,52 @@ const FeedConsume = () => {
       {loading && <Loader />}
 
       {/* Header + Buttons */}
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold">Feed Consumption</h2>
-        <div className="flex gap-4">
-          <button
-            className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
-            onClick={() => navigate("/pms/feed-stock")}
-          >
-            View Feed Stock
-          </button>
-          <button
-            className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
-            onClick={() => {
-              setModalOpen(true);
-              setActionType("create");
-              setNewConsumption({
-                date: "",
-                feedType: "",
-                quantityUsed: "",
-                consumedBy: "",
-                notes: "",
-              });
-              setValidationErrors({});
-            }}
-          >
-            <FaPlus className="text-sm" />
-            Record Consumption
-          </button>
-        </div>
-      </div>
+      {/* Header + Buttons */}
+    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+  <h2 className="text-xl font-semibold">Feed Consumption</h2>
+
+  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-800 transition-all duration-300"
+      onClick={() => navigate("/pms/feed-stock")}
+    >
+      View Feed Stock
+    </button>
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 transform hover:scale-105 shadow-md flex items-center gap-2"
+      onClick={() => {
+        setModalOpen(true);
+        setActionType("create");
+        setNewConsumption({
+          date: "",
+          feedType: "",
+          quantityUsed: "",
+          consumedBy: "",
+          notes: "",
+        });
+        setValidationErrors({});
+      }}
+    >
+      <FaPlus className="text-sm" />
+      Record Consumption
+    </button>
+  </div>
+</div>
+
 
       {/* Summary Boxes */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
-        {Object.entries(feedTypeTotals).map(([type, total]) => (
-          <div
-            key={type}
-            className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600"
-          >
-            <h4 className="text-sm font-semibold text-gray-700">{type} Feed</h4>
-            <p className="text-lg font-bold text-blue-700">{total} kg</p>
-          </div>
-        ))}
-      </div>
+<div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-6">
+  {Object.entries(feedTypeTotals).map(([type, total]) => (
+    <div
+      key={type}
+      className="bg-white p-4 rounded-lg shadow-md border-l-4 border-blue-600"
+    >
+      <h4 className="text-sm font-semibold text-gray-700">{type} Feed</h4>
+      <p className="text-lg font-bold text-blue-700">{total} kg</p>
+    </div>
+  ))}
+</div>
+
 
       {/* Table */}
       <div className="overflow-x-auto">
