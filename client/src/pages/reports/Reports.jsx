@@ -183,7 +183,7 @@ const Reports = () => {
                 <th className="border px-4 py-2">Date</th>
                 <th className="border px-4 py-2">Feed Type</th>
                 <th className="border px-4 py-2">Quantity Used</th>
-                <th className="border px-4 py-2">Batch</th>
+                {/* <th className="border px-4 py-2">Batch</th> */}
               </tr>
             </thead>
             <tbody>
@@ -194,7 +194,7 @@ const Reports = () => {
                   <td className="border px-4 py-2">
                     {item.quantityUsed ?? item.quantity}
                   </td>
-                  <td className="border px-4 py-2">{item.batch || "-"}</td>
+                  {/* <td className="border px-4 py-2">{item.batch || "-"}</td> */}
                 </tr>
               ))}
             </tbody>
