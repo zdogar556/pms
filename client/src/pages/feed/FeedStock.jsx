@@ -79,12 +79,12 @@ const FeedStock = () => {
         <Loader />
       ) : (
         <>
-          {/* Cards */}
-          <div className="flex flex-wrap gap-4 mb-8">
+          {/* Cards - Responsive Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-8">
             {Object.keys(feedColors).map((type) => (
               <div
                 key={type}
-                className={`min-w-[200px] p-4 rounded-lg shadow-md border-t-4 ${feedColors[type]}`}
+                className={`p-4 rounded-lg shadow-md border-t-4 ${feedColors[type]}`}
               >
                 <h4 className="text-sm font-semibold">{type} Feed</h4>
                 <p className="text-lg font-bold">
@@ -96,8 +96,8 @@ const FeedStock = () => {
             ))}
           </div>
 
-          {/* Bar Chart - Current Stock Only */}
-          <div className="w-full h-96 bg-white rounded-lg shadow-md p-4">
+          {/* Bar Chart - Auto Responsive */}
+          <div className="w-full h-80 bg-white rounded-lg shadow-md p-4">
             <h3 className="text-lg font-semibold mb-4">Feed Stock Chart</h3>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData}>
@@ -105,7 +105,7 @@ const FeedStock = () => {
                 <XAxis dataKey="feedType" />
                 <YAxis />
                 <Tooltip />
-                <Bar dataKey="quantity" barSize={50}>
+                <Bar dataKey="quantity" barSize={40}>
                   {chartData.map((entry, index) => (
                     <Cell
                       key={`cell-${index}`}
