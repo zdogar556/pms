@@ -126,46 +126,46 @@ const Production = () => {
     <div className="p-6 text-[0.828rem]">
       {loading && <Loader />}
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Production Management</h2>
-        <div className="flex gap-4" >
-          <button
-        className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-300 ease-in-out flex items-center gap-2"
-           onClick={() => navigate("production-stock")}
-            >
-          Egg Stock
-          </button>
-        <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#212121] focus:ring-offset-2 shadow-md hover:shadow-lg flex items-center gap-2"
-          onClick={() => {
-            setActionType("create");
-            setNewProduction({ date: "", totalEggs: "", damagedEggs: "" });
-            setErrors({});
-            setModalOpen(true);
-          }}
-        >
-          <FaPlus className="text-sm" />
-          Add Production
-        </button>
-        </div>
-        
-      </div>
+      {/* Header with buttons */}
+<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+  <h2 className="text-xl font-semibold">Production Management</h2>
+  <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-all duration-300"
+      onClick={() => navigate("production-stock")}
+    >
+      Egg Stock
+    </button>
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 flex items-center gap-2"
+      onClick={() => {
+        setActionType("create");
+        setNewProduction({ date: "", totalEggs: "", damagedEggs: "" });
+        setErrors({});
+        setModalOpen(true);
+      }}
+    >
+      <FaPlus className="text-sm" />
+      Add Production
+    </button>
+  </div>
+</div>
 
-      {/* Summary Box */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-blue-600">
-          <h4 className="font-semibold text-gray-700">Total Eggs</h4>
-          <p className="text-2xl font-bold text-blue-600">{totalEggs} Eggs</p>
-        </div>
-        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-red-500">
-          <h4 className="font-semibold text-gray-700">Damaged Eggs</h4>
-          <p className="text-2xl font-bold text-red-500">{damagedEggs} Eggs</p>
-        </div>
-        <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-green-600">
-          <h4 className="font-semibold text-gray-700">Good Eggs</h4>
-          <p className="text-2xl font-bold text-green-600">{goodEggs} Eggs</p>
-        </div>
-      </div>
+{/* Summary Boxes */}
+<div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+  <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-blue-600">
+    <h4 className="font-semibold text-gray-700">Total Eggs</h4>
+    <p className="text-2xl font-bold text-blue-600">{totalEggs} Eggs</p>
+  </div>
+  <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-red-500">
+    <h4 className="font-semibold text-gray-700">Damaged Eggs</h4>
+    <p className="text-2xl font-bold text-red-500">{damagedEggs} Eggs</p>
+  </div>
+  <div className="bg-white shadow-md rounded-lg p-4 border-l-4 border-green-600">
+    <h4 className="font-semibold text-gray-700">Good Eggs</h4>
+    <p className="text-2xl font-bold text-green-600">{goodEggs} Eggs</p>
+  </div>
+</div>
 
       <div className="overflow-x-auto">
         <table className="w-full border-collapse bg-white shadow-lg rounded-lg whitespace-nowrap">
