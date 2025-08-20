@@ -199,7 +199,7 @@ const Production = () => {
           <td className="px-4 py-3 text-center">
             {production.totalEggs - production.damagedEggs} Eggs
           </td>
-          <td className="px-4 py-3 flex gap-2 text-center">
+          <td className="pl-12 py-3 flex space-x-2">
             <button
               onClick={() => handleEdit(production._id)}
               className="text-blue-500 hover:text-blue-700"
