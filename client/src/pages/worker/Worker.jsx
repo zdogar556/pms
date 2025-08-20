@@ -101,26 +101,27 @@ const Worker = () => {
     <div className="p-6 text-sm">
       {loading && <Loader />}
 
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-semibold">Worker Management</h2>
-        <div className="flex gap-4">
-          <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
-            onClick={() => navigate("/pms/worker/attendance")}
-            >
-              Attendance
-            </button>
-        <button
-          className="bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2"
-          onClick={() => setModalOpen(true)}
-        >
-          <FaPlus className="text-sm" />
-          Add Worker
-        </button>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
+  <h2 className="text-xl font-semibold">Worker Management</h2>
 
-        </div>
-        
-      </div>
+  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
+      onClick={() => navigate("/pms/worker/attendance")}
+    >
+      Attendance
+    </button>
+
+    <button
+      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
+      onClick={() => setModalOpen(true)}
+    >
+      <FaPlus className="text-sm" />
+      Add Worker
+    </button>
+  </div>
+</div>
+
 
       <div className="overflow-x-auto">
         <table className="w-full bg-white shadow-lg rounded-lg whitespace-nowrap">
