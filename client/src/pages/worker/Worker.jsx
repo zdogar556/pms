@@ -20,6 +20,7 @@ const Worker = () => {
   const [actionType, setActionType] = useState("create");
   const [updateWorkerId, setUpdateWorkerId] = useState(null);
   const [salaryError, setSalaryError] = useState(false);
+  const [contactError, setContactError] = useState(false); // ✅ new state
   const [newWorker, setNewWorker] = useState({
     name: "",
     role: "",
@@ -31,45 +32,54 @@ const Worker = () => {
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setNewWorker({ ...newWorker, [name]: value });
+  const { name, value } = e.target;
+  setNewWorker({ ...newWorker, [name]: value });
 
-    if (name === "salary") {
-      const salary = parseFloat(value);
-      setSalaryError(salary <= 0 || isNaN(salary));
-    }
-  };
+  if (name === "salary") {
+    const salary = parseFloat(value);
+    setSalaryError(salary <= 0 || isNaN(salary));
+  }
+
+  if (name === "contact") {
+    const contactRegex = /^[0-9]{11}$/; // ✅ only 11 digits allowed
+    setContactError(!contactRegex.test(value));
+  }
+};
 
   const handleWorker = async () => {
-    const salary = parseFloat(newWorker.salary);
+  const salary = parseFloat(newWorker.salary);
+  const contactRegex = /^[0-9]{11}$/;
 
-    if (
-      !newWorker.name ||
-      !newWorker.role ||
-      !newWorker.salary ||
-      !newWorker.contact ||
-      !newWorker.shift ||
-      salary <= 0
-    ) {
-      setSalaryError(salary <= 0);
-      alert("Please fill all fields correctly. Salary must be greater than 0.");
-      return;
-    }
+  if (
+    !newWorker.name ||
+    !newWorker.role ||
+    !newWorker.salary ||
+    !newWorker.contact ||
+    !newWorker.shift ||
+    salary <= 0 ||
+    !contactRegex.test(newWorker.contact) // ✅ check contact
+  ) {
+    setSalaryError(salary <= 0);
+    setContactError(!contactRegex.test(newWorker.contact));
+    alert("Please fill all fields correctly. Salary > 0 and Contact must be 11 digits.");
+    return;
+  }
 
-    if (actionType === "create") await createWorker(newWorker);
-    else await updateWorker(updateWorkerId, newWorker);
+  if (actionType === "create") await createWorker(newWorker);
+  else await updateWorker(updateWorkerId, newWorker);
 
-    setActionType("create");
-    setModalOpen(false);
-    setNewWorker({
-      name: "",
-      role: "",
-      salary: "",
-      contact: "",
-      shift: "",
-    });
-    setSalaryError(false);
-  };
+  setActionType("create");
+  setModalOpen(false);
+  setNewWorker({
+    name: "",
+    role: "",
+    salary: "",
+    contact: "",
+    shift: "",
+  });
+  setSalaryError(false);
+  setContactError(false);
+};
 
   const handleEdit = async (id) => {
     if (id) {
@@ -236,13 +246,25 @@ const Worker = () => {
                   </p>
                 )}
                 <input
-                  type="text"
-                  name="contact"
-                  placeholder="Contact"
-                  value={newWorker.contact}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-500"
-                />
+  type="text"
+  name="contact"
+  placeholder="Contact (11 digits)"
+  value={newWorker.contact}
+  onChange={handleInputChange}
+  maxLength={11}  // <-- comment must be inside { } if you want it here
+  className={`border p-2.5 rounded-md focus:ring-2 ${
+    contactError
+      ? "border-red-500 focus:ring-red-400"
+      : "border-gray-300 focus:ring-blue-500"
+  }`}
+/>
+{contactError && (
+  <p className="text-red-600 text-sm -mt-2">
+    Contact must be exactly 11 digits
+  </p>
+)}
+
+
                 <select
                   name="shift"
                   value={newWorker.shift}
