@@ -190,9 +190,9 @@ const Reports = () => {
               {reportData.map((item, index) => (
                 <tr key={index}>
                   <td className="border px-4 py-2">{formatDate(item.date)}</td>
-                  <td className="border px-4 py-2">{item.feedType} Kg</td>
+                  <td className="border px-4 py-2">{item.feedType} </td>
                   <td className="border px-4 py-2">
-                    {item.quantityUsed ?? item.quantity}
+                    {item.quantityUsed ?? item.quantity}Kg
                   </td>
                   {/* <td className="border px-4 py-2">{item.batch || "-"}</td> */}
                 </tr>
