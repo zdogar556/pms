@@ -59,6 +59,14 @@ const Feed = () => {
     } else if (name === "cost") {
       delete errors.cost;
     }
+    if (name === "supplier") {
+  const supplierRegex = /^[A-Za-z\s]+$/; // only letters + spaces
+  if (!supplierRegex.test(value)) {
+    errors.supplier = "Supplier name must contain only letters.";
+  } else {
+    delete errors.supplier;
+  }
+}
 
     setValidationErrors(errors);
   };
@@ -69,6 +77,11 @@ const Feed = () => {
     if (!newFeed.date) errors.date = "Date is required.";
     if (Number(newFeed.quantity) <= 0) errors.quantity = "Quantity must be greater than 0.";
     if (Number(newFeed.cost) <= 0) errors.cost = "Cost must be greater than 0.";
+    if (!newFeed.supplier) {
+  errors.supplier = "Supplier is required.";
+} else if (!/^[A-Za-z\s]+$/.test(newFeed.supplier)) {
+  errors.supplier = "Supplier name must contain only letters.";
+}
 
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -309,13 +322,21 @@ const Feed = () => {
                 )}
 
                 <input
-                  type="text"
-                  name="supplier"
-                  placeholder="Supplier"
-                  value={newFeed.supplier}
-                  onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
+  type="text"
+  name="supplier"
+  placeholder="Supplier"
+  value={newFeed.supplier}
+  onChange={handleInputChange}
+  className={`border p-2.5 rounded-md focus:outline-none focus:ring-2 ${
+    validationErrors.supplier
+      ? "border-red-500 focus:ring-red-500"
+      : "border-gray-300 focus:ring-blue-500"
+  }`}
+/>
+{validationErrors.supplier && (
+  <p className="text-red-600 text-xs mt-1">{validationErrors.supplier}</p>
+)}
+
                 <input
                   type="text"
                   name="notes"
