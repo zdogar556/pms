@@ -1,8 +1,7 @@
 import React, { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { useNavigate } from "react-router-dom";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { HiMail, HiLockClosed, HiEye, HiEyeOff } from "react-icons/hi";
 
 const ForgotPassword = () => {
@@ -11,10 +10,37 @@ const ForgotPassword = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState(""); // ✅ inline error
+
   const navigate = useNavigate();
+
+  // ✅ Password validation
+  const validatePassword = (password) => {
+    const strongRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
+    if (!password) return "Password is required";
+    if (!strongRegex.test(password)) {
+      return "Password must be at least 8 chars and include uppercase, lowercase, number, and special character.";
+    }
+    return "";
+  };
+
+  // ✅ Handle live validation
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setNewPassword(value);
+    setPasswordError(validatePassword(value));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // final check before submit
+    const error = validatePassword(newPassword);
+    if (error) {
+      setPasswordError(error);
+      return;
+    }
 
     if (newPassword !== confirmPassword) {
       toast.error("Passwords do not match");
@@ -41,72 +67,74 @@ const ForgotPassword = () => {
     <div className="flex items-center justify-center h-screen bg-gray-100">
       <div className="bg-white shadow-lg rounded-lg p-8 w-full max-w-md">
         <h2 className="text-2xl font-bold mb-6 text-center">Forgot Password</h2>
-        <form onSubmit={handleSubmit}>
-
-          {/* Email with Icon */}
-           <label className="block font-medium text-gray-600 mb-2">
-              Email
-            </label>
-          <div className="relative mb-4">
-            <span className="absolute left-3 top-3 text-gray-500">
-              <HiMail size={20} />
-            </span>
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-3 pl-10 border rounded"
-              required
-            />
+        <form onSubmit={handleSubmit} className="text-sm">
+          {/* --- Email --- */}
+          <div className="mb-4">
+            <label className="block font-medium text-gray-600 mb-2">Email</label>
+            <div className="relative flex items-center">
+              <HiMail className="absolute left-3 text-gray-400 text-lg" />
+              <input
+                type="email"
+                placeholder="Enter your email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="pl-10 pr-4 py-2 w-full rounded-lg border focus:border-blue-500 focus:outline-none"
+                required
+              />
+            </div>
           </div>
 
-          {/* New Password with Icon + Eye Toggle */}
-          <label className="block font-medium text-gray-600 mb-2">
+          {/* --- New Password --- */}
+          <div className="mb-2">
+            <label className="block font-medium text-gray-600 mb-2">
               Enter new password
             </label>
-          <div className="relative mb-4">
-            <span className="absolute left-3 top-3 text-gray-500">
-              <HiLockClosed size={20} />
-            </span>
-            <input
-              type={showNewPassword ? "text" : "password"}
-              placeholder="New Password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full p-3 pl-10 pr-10 border rounded"
-              required
-            />
-            <span
-              className="absolute right-3 top-3 cursor-pointer text-gray-500"
-              onClick={() => setShowNewPassword(!showNewPassword)}
-            >
-              {showNewPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
-            </span>
+            <div className="relative flex items-center">
+              <HiLockClosed className="absolute left-3 text-gray-400 text-lg" />
+              <input
+                type={showNewPassword ? "text" : "password"}
+                placeholder="New Password"
+                value={newPassword}
+                onChange={handlePasswordChange}
+                className={`pl-10 pr-10 py-2 w-full rounded-lg border focus:border-blue-500 focus:outline-none ${
+                  passwordError ? "border-red-500" : ""
+                }`}
+                required
+              />
+              <span
+                className="absolute right-3 text-gray-500 cursor-pointer"
+                onClick={() => setShowNewPassword(!showNewPassword)}
+              >
+                {showNewPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+              </span>
+            </div>
+            {passwordError && (
+              <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+            )}
           </div>
 
-          {/* Confirm Password with Icon + Eye Toggle */}
-          <label className="block font-medium text-gray-600 mb-2">
-              Confrim new password
+          {/* --- Confirm Password --- */}
+          <div className="mb-6">
+            <label className="block font-medium text-gray-600 mb-2">
+              Confirm new password
             </label>
-          <div className="relative mb-6">
-            <span className="absolute left-3 top-3 text-gray-500">
-              <HiLockClosed size={20} />
-            </span>
-            <input
-              type={showConfirmPassword ? "text" : "password"}
-              placeholder="Confirm New Password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full p-3 pl-10 pr-10 border rounded"
-              required
-            />
-            <span
-              className="absolute right-3 top-3 cursor-pointer text-gray-500"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-            >
-              {showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
-            </span>
+            <div className="relative flex items-center">
+              <HiLockClosed className="absolute left-3 text-gray-400 text-lg" />
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm New Password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                className="pl-10 pr-10 py-2 w-full rounded-lg border focus:border-blue-500 focus:outline-none"
+                required
+              />
+              <span
+                className="absolute right-3 text-gray-500 cursor-pointer"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              >
+                {showConfirmPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
+              </span>
+            </div>
           </div>
 
           <button
@@ -116,6 +144,7 @@ const ForgotPassword = () => {
             Submit
           </button>
         </form>
+
         <p className="mt-4 text-center text-sm text-gray-500">
           Got it?{" "}
           <Link to="/" className="text-blue-600">

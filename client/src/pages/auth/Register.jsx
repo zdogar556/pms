@@ -11,11 +11,35 @@ const Register = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // Toggle password visibility
+  const [showPassword, setShowPassword] = useState(false); 
+  const [passwordError, setPasswordError] = useState("");
+
+  // Password validation
+  const validatePassword = (password) => {
+    const strongRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#]).{8,}$/;
+    if (!password) return "Password is required";
+    if (!strongRegex.test(password)) {
+      return "Password must be at least 8 chars long and include uppercase, lowercase, number, and special character.";
+    }
+    return "";
+  };
+
+  // Handle password input change
+  const handlePasswordChange = (e) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordError(validatePassword(value));
+  };
 
   // Handle form submit
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const error = validatePassword(password);
+    if (error) {
+      setPasswordError(error);
+      return;
+    }
     await register({ email, password, name });
   };
 
@@ -71,25 +95,22 @@ const Register = () => {
           </div>
 
           {/* --- Password Field with Show/Hide --- */}
-          <div className="mb-4">
+          <div className="mb-2">
             <label className="block font-medium text-gray-600 mb-2">
               Password
             </label>
             <div className="relative flex items-center">
-              {/* Lock Icon */}
               <HiLockClosed className="absolute left-3 text-gray-400 text-lg" />
-
-              {/* Input Field */}
               <input
-                type={showPassword ? "text" : "password"} // Toggle between text & password
-                className="pl-10 pr-10 py-2 w-full rounded-lg border focus:border-blue-500 focus:outline-none"
+                type={showPassword ? "text" : "password"}
+                className={`pl-10 pr-10 py-2 w-full rounded-lg border focus:border-blue-500 focus:outline-none ${
+                  passwordError ? "border-red-500" : ""
+                }`}
                 placeholder="Enter your password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={handlePasswordChange}
                 required
               />
-
-              {/* Eye Icon for Toggle */}
               <span
                 className="absolute right-3 text-gray-500 cursor-pointer"
                 onClick={() => setShowPassword(!showPassword)}
@@ -97,12 +118,16 @@ const Register = () => {
                 {showPassword ? <HiEyeOff size={20} /> : <HiEye size={20} />}
               </span>
             </div>
+            {/* Inline error message */}
+            {passwordError && (
+              <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+            )}
           </div>
 
           {/* --- Submit Button --- */}
           <button
             type="submit"
-            className="w-full rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
+            className="mt-3 w-full rounded-lg bg-blue-600 px-4 py-2 text-white transition hover:bg-blue-700"
           >
             {loading ? (
               <div className="flex gap-2 justify-center items-center">
