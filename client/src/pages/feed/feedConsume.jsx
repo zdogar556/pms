@@ -63,6 +63,27 @@ const FeedConsume = () => {
         delete errors.quantityUsed;
       }
     }
+    if (name === "quantityUsed") {
+  const qty = parseFloat(value);
+  const available = getAvailableStock(newConsumption.feedType);
+
+  if (qty <= 0) {
+    errors.quantityUsed = "Quantity must be greater than 0.";
+  } else if (qty > available) {
+    errors.quantityUsed = `Only ${available} kg available in stock.`;
+  } else {
+    delete errors.quantityUsed;
+  }
+}
+
+if (name === "consumedBy") {
+  const regex = /^[A-Za-z\s]+$/; // only letters + spaces
+  if (!regex.test(value)) {
+    errors.consumedBy = "Consumed By must contain only letters.";
+  } else {
+    delete errors.consumedBy;
+  }
+}
 
     setValidationErrors(errors);
   };
@@ -101,6 +122,25 @@ const FeedConsume = () => {
         errors.quantityUsed = `Only ${available} kg available in stock.`;
       }
     }
+    if (!newConsumption.quantityUsed) {
+  errors.quantityUsed = "Quantity is required.";
+} else {
+  const quantity = parseFloat(newConsumption.quantityUsed);
+  const available = getAvailableStock(newConsumption.feedType);
+
+  if (quantity <= 0) {
+    errors.quantityUsed = "Quantity must be greater than 0.";
+  } else if (quantity > available) {
+    errors.quantityUsed = `Only ${available} kg available in stock.`;
+  }
+}
+
+if (!newConsumption.consumedBy) {
+  errors.consumedBy = "Consumed By is required.";
+} else if (!/^[A-Za-z\s]+$/.test(newConsumption.consumedBy)) {
+  errors.consumedBy = "Consumed By must contain only letters.";
+}
+
 
     setValidationErrors(errors);
     if (Object.keys(errors).length > 0) return;
@@ -339,29 +379,42 @@ const FeedConsume = () => {
   <div className="flex flex-col">
     <label className="text-sm font-medium text-gray-700 mb-1">Quantity Used (kg)</label>
     <input
-      type="number"
-      name="quantityUsed"
-      placeholder="Enter quantity"
-      value={newConsumption.quantityUsed}
-      onChange={handleInputChange}
-      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
-    {validationErrors.quantityUsed && (
-      <p className="text-red-600 text-xs mt-1">{validationErrors.quantityUsed}</p>
-    )}
+  type="number"
+  name="quantityUsed"
+  placeholder="Enter quantity"
+  value={newConsumption.quantityUsed}
+  onChange={handleInputChange}
+  className={`w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 ${
+    validationErrors.quantityUsed
+      ? "border-red-500 focus:ring-red-500"
+      : "border-gray-300 focus:ring-blue-500"
+  }`}
+/>
+{validationErrors.quantityUsed && (
+  <p className="text-red-600 text-xs mt-1">{validationErrors.quantityUsed}</p>
+)}
+
   </div>
 
   {/* Consumed By */}
   <div className="flex flex-col">
     <label className="text-sm font-medium text-gray-700 mb-1">Consumed By</label>
     <input
-      type="text"
-      name="consumedBy"
-      placeholder="Enter person or group"
-      value={newConsumption.consumedBy}
-      onChange={handleInputChange}
-      className="w-full border border-gray-300 px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-    />
+  type="text"
+  name="consumedBy"
+  placeholder="Enter person or group"
+  value={newConsumption.consumedBy}
+  onChange={handleInputChange}
+  className={`w-full border px-3 py-2 rounded-md text-sm focus:outline-none focus:ring-2 ${
+    validationErrors.consumedBy
+      ? "border-red-500 focus:ring-red-500"
+      : "border-gray-300 focus:ring-blue-500"
+  }`}
+/>
+{validationErrors.consumedBy && (
+  <p className="text-red-600 text-xs mt-1">{validationErrors.consumedBy}</p>
+)}
+
   </div>
 
   {/* Notes */}
