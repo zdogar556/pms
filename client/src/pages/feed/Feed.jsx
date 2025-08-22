@@ -189,7 +189,7 @@ const Feed = () => {
             <tr>
               <th className="px-4 py-3">Date</th>
               <th className="px-4 py-3">Feed Type</th>
-              <th className="px-4 py-3">Quantity</th>
+              <th className="px-4 py-3">Quantity(Kg)</th>
               <th className="px-4 py-3">Cost</th>
               <th className="px-4 py-3">Supplier</th>
               <th className="px-4 py-3">Notes</th>
