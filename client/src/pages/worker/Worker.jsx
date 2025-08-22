@@ -20,7 +20,8 @@ const Worker = () => {
   const [actionType, setActionType] = useState("create");
   const [updateWorkerId, setUpdateWorkerId] = useState(null);
   const [salaryError, setSalaryError] = useState(false);
-  const [contactError, setContactError] = useState(false); // ✅ new state
+  const [contactError, setContactError] = useState(false);
+  const [nameError, setNameError] = useState(false); // ✅ added for name validation
   const [newWorker, setNewWorker] = useState({
     name: "",
     role: "",
@@ -32,54 +33,69 @@ const Worker = () => {
   const navigate = useNavigate();
 
   const handleInputChange = (e) => {
-  const { name, value } = e.target;
-  setNewWorker({ ...newWorker, [name]: value });
+    const { name, value } = e.target;
 
-  if (name === "salary") {
-    const salary = parseFloat(value);
-    setSalaryError(salary <= 0 || isNaN(salary));
-  }
+    if (name === "name") {
+      // ✅ allow only letters & spaces
+      const cleaned = value.replace(/[^A-Za-z\s]/g, "");
+      setNewWorker({ ...newWorker, [name]: cleaned });
 
-  if (name === "contact") {
-    const contactRegex = /^[0-9]{11}$/; // ✅ only 11 digits allowed
-    setContactError(!contactRegex.test(value));
-  }
-};
+      const nameRegex = /^[A-Za-z\s]+$/;
+      setNameError(cleaned.trim() === "" || !nameRegex.test(cleaned));
+      return;
+    }
+
+    if (name === "salary") {
+      const salary = parseFloat(value);
+      setSalaryError(salary <= 0 || isNaN(salary));
+    }
+
+    if (name === "contact") {
+      const contactRegex = /^[0-9]{11}$/; 
+      setContactError(!contactRegex.test(value));
+    }
+
+    setNewWorker({ ...newWorker, [name]: value });
+  };
 
   const handleWorker = async () => {
-  const salary = parseFloat(newWorker.salary);
-  const contactRegex = /^[0-9]{11}$/;
+    const salary = parseFloat(newWorker.salary);
+    const contactRegex = /^[0-9]{11}$/;
+    const nameRegex = /^[A-Za-z\s]+$/;
 
-  if (
-    !newWorker.name ||
-    !newWorker.role ||
-    !newWorker.salary ||
-    !newWorker.contact ||
-    !newWorker.shift ||
-    salary <= 0 ||
-    !contactRegex.test(newWorker.contact) // ✅ check contact
-  ) {
-    setSalaryError(salary <= 0);
-    setContactError(!contactRegex.test(newWorker.contact));
-    alert("Please fill all fields correctly. Salary > 0 and Contact must be 11 digits.");
-    return;
-  }
+    if (
+      !newWorker.name ||
+      !newWorker.role ||
+      !newWorker.salary ||
+      !newWorker.contact ||
+      !newWorker.shift ||
+      salary <= 0 ||
+      !contactRegex.test(newWorker.contact) ||
+      !nameRegex.test(newWorker.name)
+    ) {
+      setSalaryError(salary <= 0);
+      setContactError(!contactRegex.test(newWorker.contact));
+      setNameError(!nameRegex.test(newWorker.name));
+      alert("Please fill all fields correctly. Name must be letters only, Salary > 0, and Contact must be 11 digits.");
+      return;
+    }
 
-  if (actionType === "create") await createWorker(newWorker);
-  else await updateWorker(updateWorkerId, newWorker);
+    if (actionType === "create") await createWorker(newWorker);
+    else await updateWorker(updateWorkerId, newWorker);
 
-  setActionType("create");
-  setModalOpen(false);
-  setNewWorker({
-    name: "",
-    role: "",
-    salary: "",
-    contact: "",
-    shift: "",
-  });
-  setSalaryError(false);
-  setContactError(false);
-};
+    setActionType("create");
+    setModalOpen(false);
+    setNewWorker({
+      name: "",
+      role: "",
+      salary: "",
+      contact: "",
+      shift: "",
+    });
+    setSalaryError(false);
+    setContactError(false);
+    setNameError(false);
+  };
 
   const handleEdit = async (id) => {
     if (id) {
@@ -112,26 +128,25 @@ const Worker = () => {
       {loading && <Loader />}
 
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3 sm:gap-0">
-  <h2 className="text-xl font-semibold">Worker Management</h2>
+        <h2 className="text-xl font-semibold">Worker Management</h2>
 
-  <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-    <button
-      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
-      onClick={() => navigate("/pms/worker/attendance")}
-    >
-      Attendance
-    </button>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+          <button
+            className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
+            onClick={() => navigate("/pms/worker/attendance")}
+          >
+            Attendance
+          </button>
 
-    <button
-      className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
-      onClick={() => setModalOpen(true)}
-    >
-      <FaPlus className="text-sm" />
-      Add Worker
-    </button>
-  </div>
-</div>
-
+          <button
+            className="w-full sm:w-auto bg-[#2A2A40] text-white px-6 py-2 rounded-lg hover:bg-black transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center justify-center gap-2"
+            onClick={() => setModalOpen(true)}
+          >
+            <FaPlus className="text-sm" />
+            Add Worker
+          </button>
+        </div>
+      </div>
 
       <div className="overflow-x-auto">
         <table className="w-full bg-white shadow-lg rounded-lg whitespace-nowrap">
@@ -212,8 +227,18 @@ const Worker = () => {
                   placeholder="Name"
                   value={newWorker.name}
                   onChange={handleInputChange}
-                  className="border border-gray-300 p-2.5 rounded-md focus:ring-2 focus:ring-blue-500"
+                  className={`border p-2.5 rounded-md focus:ring-2 ${
+                    nameError
+                      ? "border-red-500 focus:ring-red-400"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
                 />
+                {nameError && (
+                  <p className="text-red-600 text-sm -mt-2">
+                    Name must contain only letters
+                  </p>
+                )}
+
                 <select
                   name="role"
                   value={newWorker.role}
@@ -228,6 +253,7 @@ const Worker = () => {
                   <option value="Poultry Caretaker">Poultry Caretaker</option>
                   <option value="Processing Worker">Processing Worker</option>
                 </select>
+
                 <input
                   type="number"
                   name="salary"
@@ -245,25 +271,25 @@ const Worker = () => {
                     Salary must be greater than 0
                   </p>
                 )}
-                <input
-  type="text"
-  name="contact"
-  placeholder="Contact (11 digits)"
-  value={newWorker.contact}
-  onChange={handleInputChange}
-  maxLength={11}  // <-- comment must be inside { } if you want it here
-  className={`border p-2.5 rounded-md focus:ring-2 ${
-    contactError
-      ? "border-red-500 focus:ring-red-400"
-      : "border-gray-300 focus:ring-blue-500"
-  }`}
-/>
-{contactError && (
-  <p className="text-red-600 text-sm -mt-2">
-    Contact must be exactly 11 digits
-  </p>
-)}
 
+                <input
+                  type="text"
+                  name="contact"
+                  placeholder="Contact (11 digits)"
+                  value={newWorker.contact}
+                  onChange={handleInputChange}
+                  maxLength={11}
+                  className={`border p-2.5 rounded-md focus:ring-2 ${
+                    contactError
+                      ? "border-red-500 focus:ring-red-400"
+                      : "border-gray-300 focus:ring-blue-500"
+                  }`}
+                />
+                {contactError && (
+                  <p className="text-red-600 text-sm -mt-2">
+                    Contact must be exactly 11 digits
+                  </p>
+                )}
 
                 <select
                   name="shift"
@@ -289,6 +315,8 @@ const Worker = () => {
                     onClick={() => {
                       setModalOpen(false);
                       setSalaryError(false);
+                      setContactError(false);
+                      setNameError(false);
                     }}
                   >
                     Cancel
